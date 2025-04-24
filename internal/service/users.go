@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
+	"net/smtp"
 	"strings"
 	"time"
 
@@ -19,6 +21,10 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	// ErrInvalidToken is returned when the token is invalid or expired
 	ErrInvalidToken = errors.New("invalid or expired token")
+	// ErrEmailSendingFailed is returned when the system fails to send an email
+	ErrEmailSendingFailed = errors.New("failed to send email")
+	// ErrMissingEmailConfig is returned when email configuration is missing
+	ErrMissingEmailConfig = errors.New("email configuration is missing")
 )
 
 type UserService struct {
@@ -157,6 +163,51 @@ func (s *UserService) generateTokens(user *aggregate.User) (*aggregate.JwtToken,
 	return jwtToken, nil
 }
 
+// Helper function to generate a random password
+func generateRandomPassword(length int) string {
+	rand.Seed(time.Now().UnixNano())
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+"
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(result)
+}
+
+// Helper function to send an email
+func (s *UserService) sendEmail(to, subject, body string) error {
+	if s.cfg.Email.Host == "" {
+		return ErrMissingEmailConfig
+	}
+
+	// Set up authentication information
+	auth := smtp.PlainAuth("", s.cfg.Email.Username, s.cfg.Email.Password, s.cfg.Email.Host)
+
+	// Compose the email
+	msg := []byte(fmt.Sprintf("From: %s\r\n"+
+		"To: %s\r\n"+
+		"Subject: %s\r\n"+
+		"MIME-Version: 1.0\r\n"+
+		"Content-Type: text/html; charset=UTF-8\r\n"+
+		"\r\n"+
+		"%s\r\n", s.cfg.Email.From, to, subject, body))
+
+	// Connect to the server, authenticate, set the sender and recipient, and send the email
+	err := smtp.SendMail(
+		fmt.Sprintf("%s:%d", s.cfg.Email.Host, s.cfg.Email.Port),
+		auth,
+		s.cfg.Email.From,
+		[]string{to},
+		msg,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	return nil
+}
+
 // AddUserToCompetition adds the referee role for a specific competition to a user
 func (s *UserService) AddUserToCompetition(ctx context.Context, email string, competitionID int32) error {
 	// Get the user
@@ -193,4 +244,67 @@ func (s *UserService) AddUserToCompetition(ctx context.Context, email string, co
 
 	// Save the changes
 	return s.userRepo.UpdateUser(ctx, user)
+}
+
+// InviteUser creates a new user with a referee role for a specific competition and sends an invitation email
+func (s *UserService) InviteUser(ctx context.Context, firstName, lastName, email string, competitionID int32) error {
+	// Check if the user already exists
+	existingUser, err := s.userRepo.GetUserByEmail(ctx, email)
+	if err == nil && existingUser != nil {
+		// User already exists, just add the competition role
+		return s.AddUserToCompetition(ctx, email, competitionID)
+	}
+
+	// Generate a random password
+	password := generateRandomPassword(12)
+
+	// Create a new user
+	user := aggregate.NewUser()
+	user.SetEmail(email)
+	user.SetFirstName(firstName)
+	user.SetLastName(lastName)
+
+	// Set referee role for the specified competition
+	role := fmt.Sprintf("referee:%d", competitionID)
+	user.SetRole(role)
+
+	// Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+	user.SetPasswordHash(string(hashedPassword))
+
+	// Save the user to the database
+	err = s.userRepo.CreateUser(ctx, user)
+	if err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
+	}
+
+	// Prepare and send the invitation email
+	subject := "Bienvenue à Cross Competition - Invitation d'Arbitre"
+	body := fmt.Sprintf(`
+		<html>
+		<body>
+			<h2>Bienvenue à Cross Competition !</h2>
+			<p>Cher/Chère %s %s,</p>
+			<p>Vous avez été invité(e) en tant qu'arbitre pour la compétition ID : %d.</p>
+			<p>Voici vos identifiants de connexion :</p>
+			<ul>
+				<li><strong>Email :</strong> %s</li>
+				<li><strong>Mot de passe :</strong> %s</li>
+			</ul>
+			<p>Veuillez vous connecter à notre plateforme et changer votre mot de passe après votre première connexion.</p>
+			<p>Cordialement,<br>L'équipe Cross Competition</p>
+		</body>
+		</html>
+	`, firstName, lastName, competitionID, email, password)
+
+	err = s.sendEmail(email, subject, body)
+	if err != nil {
+		// Note: Even if email sending fails, the user has been created
+		return fmt.Errorf("user created but email sending failed: %w", err)
+	}
+
+	return nil
 }

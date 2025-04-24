@@ -38,12 +38,21 @@ type Jwt struct {
 	SecretKey string
 }
 
+type EmailConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	From     string
+}
+
 type Config struct {
 	Service      Service
 	Database     Database
 	ClientURI    string
 	Jwt          Jwt
 	AllowOrigins []string
+	Email        EmailConfig
 }
 
 func New() *Config {
@@ -92,6 +101,12 @@ func (c *Config) Load() {
 
 	c.Jwt.SecretKey = getStringFromEnv("JWT_SECRET_KEY")
 
+	c.Email.Host = getStringFromEnv("EMAIL_HOST")
+	c.Email.Port = getIntFromEnv("EMAIL_PORT")
+	c.Email.Username = getStringFromEnv("EMAIL_USERNAME")
+	c.Email.Password = getStringFromEnv("EMAIL_PASSWORD")
+	c.Email.From = getStringFromEnv("EMAIL_FROM")
+
 	// Origins
 	origins := getStringFromEnv("ALLOW_ORIGINS")
 	allowOrigins := strings.Split(origins, ",")
@@ -102,6 +117,15 @@ func (c *Config) Load() {
 
 func (c *Config) GetEnv() string {
 	return getStringFromEnv(AppEnv)
+}
+
+func getIntFromEnv(key string) int {
+	myInt, err := strconv.Atoi(getStringFromEnv(key))
+	if err != nil {
+		panic(err)
+	}
+
+	return myInt
 }
 
 func getStringFromEnv(key string) string {
