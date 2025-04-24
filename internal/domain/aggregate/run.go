@@ -62,9 +62,9 @@ func (r *Run) GetDoor6() bool {
 	return r.run.Door6
 }
 
-// GetPenalty returns the penalty
-func (r *Run) GetPenalty() int32 {
-	return r.run.Penalty
+// GetPenality returns the penality
+func (r *Run) GetPenality() int32 {
+	return r.run.Penality
 }
 
 // GetChronoSec returns the chrono seconds
@@ -122,9 +122,9 @@ func (r *Run) SetDoor6(door6 bool) {
 	r.run.Door6 = door6
 }
 
-// SetPenalty sets the penalty
-func (r *Run) SetPenalty(penalty int32) {
-	r.run.Penalty = penalty
+// SetPenality sets the penality
+func (r *Run) SetPenality(penality int32) {
+	r.run.Penality = penality
 }
 
 // SetChronoSec sets the chrono seconds

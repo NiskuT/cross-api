@@ -11,6 +11,6 @@ type Run struct {
 	Door4         bool
 	Door5         bool
 	Door6         bool
-	Penalty       int32
+	Penality      int32
 	ChronoSec     int32
 }

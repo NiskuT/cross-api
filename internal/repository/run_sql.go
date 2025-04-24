@@ -42,14 +42,14 @@ type Run struct {
 	Door4         bool
 	Door5         bool
 	Door6         bool
-	Penalty       int32
+	Penality      int32
 	ChronoSec     int32
 }
 
 // GetRun retrieves a run by its primary key (competition ID, run number, dossard)
 func (r *SQLRunRepository) GetRun(ctx context.Context, competitionID, runNumber, dossard int32) (*aggregate.Run, error) {
 	query := `
-		SELECT competition_id, dossard, run_number, zone, door1, door2, door3, door4, door5, door6, penalty, chrono_sec
+		SELECT competition_id, dossard, run_number, zone, door1, door2, door3, door4, door5, door6, penality, chrono_sec
 		FROM runs
 		WHERE competition_id = ? AND run_number = ? AND dossard = ?
 	`
@@ -67,7 +67,7 @@ func (r *SQLRunRepository) GetRun(ctx context.Context, competitionID, runNumber,
 		&run.Door4,
 		&run.Door5,
 		&run.Door6,
-		&run.Penalty,
+		&run.Penality,
 		&run.ChronoSec,
 	)
 
@@ -84,7 +84,7 @@ func (r *SQLRunRepository) GetRun(ctx context.Context, competitionID, runNumber,
 // ListRuns lists all runs for a competition
 func (r *SQLRunRepository) ListRuns(ctx context.Context, competitionID int32) ([]*aggregate.Run, error) {
 	query := `
-		SELECT competition_id, dossard, run_number, zone, door1, door2, door3, door4, door5, door6, penalty, chrono_sec
+		SELECT competition_id, dossard, run_number, zone, door1, door2, door3, door4, door5, door6, penality, chrono_sec
 		FROM runs
 		WHERE competition_id = ?
 		ORDER BY dossard, run_number
@@ -110,7 +110,7 @@ func (r *SQLRunRepository) ListRuns(ctx context.Context, competitionID int32) ([
 			&run.Door4,
 			&run.Door5,
 			&run.Door6,
-			&run.Penalty,
+			&run.Penality,
 			&run.ChronoSec,
 		)
 
@@ -131,7 +131,7 @@ func (r *SQLRunRepository) ListRuns(ctx context.Context, competitionID int32) ([
 // ListRunsByDossard lists all runs for a specific participant in a competition
 func (r *SQLRunRepository) ListRunsByDossard(ctx context.Context, competitionID int32, dossard int32) ([]*aggregate.Run, error) {
 	query := `
-		SELECT competition_id, dossard, run_number, zone, door1, door2, door3, door4, door5, door6, penalty, chrono_sec
+		SELECT competition_id, dossard, run_number, zone, door1, door2, door3, door4, door5, door6, penality, chrono_sec
 		FROM runs
 		WHERE competition_id = ? AND dossard = ?
 		ORDER BY run_number
@@ -157,7 +157,7 @@ func (r *SQLRunRepository) ListRunsByDossard(ctx context.Context, competitionID 
 			&run.Door4,
 			&run.Door5,
 			&run.Door6,
-			&run.Penalty,
+			&run.Penality,
 			&run.ChronoSec,
 		)
 
@@ -211,7 +211,7 @@ func (r *SQLRunRepository) CreateRun(ctx context.Context, run *aggregate.Run) er
 
 	// Now insert the run with the calculated run number
 	query := `
-		INSERT INTO runs (competition_id, dossard, run_number, zone, door1, door2, door3, door4, door5, door6, penalty, chrono_sec)
+		INSERT INTO runs (competition_id, dossard, run_number, zone, door1, door2, door3, door4, door5, door6, penality, chrono_sec)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
@@ -228,7 +228,7 @@ func (r *SQLRunRepository) CreateRun(ctx context.Context, run *aggregate.Run) er
 		run.GetDoor4(),
 		run.GetDoor5(),
 		run.GetDoor6(),
-		run.GetPenalty(),
+		run.GetPenality(),
 		run.GetChronoSec(),
 	)
 
@@ -247,7 +247,7 @@ func (r *SQLRunRepository) CreateRun(ctx context.Context, run *aggregate.Run) er
 func (r *SQLRunRepository) UpdateRun(ctx context.Context, run *aggregate.Run) error {
 	query := `
 		UPDATE runs
-		SET zone = ?, door1 = ?, door2 = ?, door3 = ?, door4 = ?, door5 = ?, door6 = ?, penalty = ?, chrono_sec = ?
+		SET zone = ?, door1 = ?, door2 = ?, door3 = ?, door4 = ?, door5 = ?, door6 = ?, penality = ?, chrono_sec = ?
 		WHERE competition_id = ? AND run_number = ? AND dossard = ?
 	`
 
@@ -261,7 +261,7 @@ func (r *SQLRunRepository) UpdateRun(ctx context.Context, run *aggregate.Run) er
 		run.GetDoor4(),
 		run.GetDoor5(),
 		run.GetDoor6(),
-		run.GetPenalty(),
+		run.GetPenality(),
 		run.GetChronoSec(),
 		run.GetCompetitionID(),
 		run.GetRunNumber(),
@@ -321,7 +321,7 @@ func mapToRunAggregate(run *Run) *aggregate.Run {
 	runAggregate.SetDoor4(run.Door4)
 	runAggregate.SetDoor5(run.Door5)
 	runAggregate.SetDoor6(run.Door6)
-	runAggregate.SetPenalty(run.Penalty)
+	runAggregate.SetPenality(run.Penality)
 	runAggregate.SetChronoSec(run.ChronoSec)
 	return runAggregate
 }
