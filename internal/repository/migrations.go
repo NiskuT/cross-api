@@ -76,12 +76,41 @@ const DropUsersTableQuery = `
 DROP TABLE IF EXISTS users;
 `
 
+// CreateRunsTableQuery creates the runs table
+const CreateRunsTableQuery = `
+CREATE TABLE IF NOT EXISTS runs (
+    competition_id INT NOT NULL,
+    dossard INT NOT NULL,
+    run_number INT NOT NULL,
+    zone VARCHAR(100) NOT NULL,
+    door1 BOOLEAN NOT NULL DEFAULT false,
+    door2 BOOLEAN NOT NULL DEFAULT false,
+    door3 BOOLEAN NOT NULL DEFAULT false,
+    door4 BOOLEAN NOT NULL DEFAULT false,
+    door5 BOOLEAN NOT NULL DEFAULT false,
+    door6 BOOLEAN NOT NULL DEFAULT false,
+    penalty INT NOT NULL DEFAULT 0,
+    chrono_sec INT NOT NULL DEFAULT 0,
+    PRIMARY KEY (competition_id, run_number, dossard),
+    FOREIGN KEY (competition_id, dossard) REFERENCES participants(competition_id, dossard_number) ON DELETE CASCADE
+);
+`
+
+// DropRunsTableQuery drops the runs table
+const DropRunsTableQuery = `
+DROP TABLE IF EXISTS runs;
+`
+
 // SetupDatabase creates necessary tables for the application
 func SetupDatabase(db interface{}) error {
 	// The actual implementation depends on the database/sql package or ORM being used
 	// For a basic implementation with database/sql:
 	/*
-		_, err := db.(*sql.DB).Exec(CreateCompetitionsTableQuery)
+		_, err := db.(*sql.DB).Exec(CreateUsersTableQuery)
+		if err != nil {
+			return err
+		}
+		_, err = db.(*sql.DB).Exec(CreateCompetitionsTableQuery)
 		if err != nil {
 			return err
 		}
@@ -93,7 +122,7 @@ func SetupDatabase(db interface{}) error {
 		if err != nil {
 			return err
 		}
-		_, err = db.(*sql.DB).Exec(CreateUsersTableQuery)
+		_, err = db.(*sql.DB).Exec(CreateRunsTableQuery)
 		return err
 	*/
 

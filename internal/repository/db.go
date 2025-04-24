@@ -54,5 +54,11 @@ func InitializeDatabase(db *sql.DB) error {
 		return fmt.Errorf("failed to create scales table: %w", err)
 	}
 
+	// Create runs table
+	_, err = db.Exec(CreateRunsTableQuery)
+	if err != nil {
+		return fmt.Errorf("failed to create runs table: %w", err)
+	}
+
 	return nil
 }
