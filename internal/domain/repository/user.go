@@ -11,4 +11,5 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user *aggregate.User) error
 	UpdateUser(ctx context.Context, user *aggregate.User) error
 	DeleteUser(ctx context.Context, id int32) error
+	GetUserByEmail(ctx context.Context, email string) (*aggregate.User, error)
 }

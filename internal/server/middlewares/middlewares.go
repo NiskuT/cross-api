@@ -48,7 +48,7 @@ func Authentication(secretKey string) gin.HandlerFunc {
 			return
 		}
 
-		if claims.VerifyIssuer("orkys.io", true) == false {
+		if claims.VerifyIssuer("golene-evasion.com", true) == false {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token issuer"})
 			return
 		}

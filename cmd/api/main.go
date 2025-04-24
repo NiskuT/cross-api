@@ -18,7 +18,9 @@ import (
 	"time"
 
 	"github.com/NiskuT/cross-api/internal/config"
+	"github.com/NiskuT/cross-api/internal/repository"
 	"github.com/NiskuT/cross-api/internal/server"
+	"github.com/NiskuT/cross-api/internal/service"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
@@ -56,9 +58,28 @@ func runRestServer(_ *cobra.Command, _ []string) {
 	log.Info().Msg("Loading configuration ...")
 	cfg := config.New()
 
+	log.Info().Msg("Initializing database ...")
+	db, err := repository.NewDatabaseConnection(cfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to initialize database")
+	}
+
+	log.Info().Msg("Initializing database ...")
+	repository.InitializeDatabase(db)
+
+	log.Info().Msg("Initializing repositories ...")
+	userRepo := repository.NewSQLUserRepository(db)
+
+	log.Info().Msg("Initializing services ...")
+	userService := service.NewUserService(
+		service.UserConfWithUserRepo(userRepo),
+		service.UserConfWithConfig(cfg),
+	)
+
 	log.Info().Msg("Creating server ...")
 	server, err := server.NewServer(
 		server.ServerConfWithConfig(cfg),
+		server.ServerConfWithUserService(userService),
 	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create server")
