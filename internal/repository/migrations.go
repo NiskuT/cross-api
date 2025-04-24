@@ -57,6 +57,25 @@ const DropScalesTableQuery = `
 DROP TABLE IF EXISTS scales;
 `
 
+// CreateUsersTableQuery creates the users table
+const CreateUsersTableQuery = `
+CREATE TABLE IF NOT EXISTS users (
+    id INT NOT NULL AUTO_INCREMENT,
+    email VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY (email)
+);
+`
+
+// DropUsersTableQuery drops the users table
+const DropUsersTableQuery = `
+DROP TABLE IF EXISTS users;
+`
+
 // SetupDatabase creates necessary tables for the application
 func SetupDatabase(db interface{}) error {
 	// The actual implementation depends on the database/sql package or ORM being used
@@ -71,6 +90,10 @@ func SetupDatabase(db interface{}) error {
 			return err
 		}
 		_, err = db.(*sql.DB).Exec(CreateScalesTableQuery)
+		if err != nil {
+			return err
+		}
+		_, err = db.(*sql.DB).Exec(CreateUsersTableQuery)
 		return err
 	*/
 

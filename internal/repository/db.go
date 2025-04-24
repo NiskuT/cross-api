@@ -30,8 +30,14 @@ func NewDatabaseConnection(cfg *config.Config) (*sql.DB, error) {
 
 // InitializeDatabase sets up the database schema
 func InitializeDatabase(db *sql.DB) error {
+	// Create users table
+	_, err := db.Exec(CreateUsersTableQuery)
+	if err != nil {
+		return fmt.Errorf("failed to create users table: %w", err)
+	}
+
 	// Create competitions table
-	_, err := db.Exec(CreateCompetitionsTableQuery)
+	_, err = db.Exec(CreateCompetitionsTableQuery)
 	if err != nil {
 		return fmt.Errorf("failed to create competitions table: %w", err)
 	}
