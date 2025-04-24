@@ -7,9 +7,7 @@ WORKDIR /app
 # Install necessary build tools
 RUN apk add --no-cache make protobuf
 
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest  && \
-    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest && \
-    go install github.com/swaggo/swag/cmd/swag@latest
+RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 # Cache dependencies first
 COPY go.mod go.sum ./

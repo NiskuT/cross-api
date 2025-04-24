@@ -34,13 +34,6 @@ type Database struct {
 	Name string
 	Uri  string
 }
-
-type ServiceUri struct {
-	UserService     string
-	BillingService  string
-	CustomerService string
-}
-
 type Jwt struct {
 	SecretKey string
 }
@@ -49,7 +42,6 @@ type Config struct {
 	Service      Service
 	Database     Database
 	ClientURI    string
-	ServiceUri   ServiceUri
 	Jwt          Jwt
 	AllowOrigins []string
 }
@@ -97,10 +89,6 @@ func (c *Config) Load() {
 
 	c.Service.Port = srvPort
 	c.Service.Name = getStringFromEnv("SERVICE_NAME")
-
-	c.ServiceUri.UserService = getStringFromEnv("USER_SERVICE_GRPC")
-	c.ServiceUri.BillingService = getStringFromEnv("BILLING_SERVICE_GRPC")
-	c.ServiceUri.CustomerService = getStringFromEnv("CUSTOMER_SERVICE_GRPC")
 
 	c.Jwt.SecretKey = getStringFromEnv("JWT_SECRET_KEY")
 

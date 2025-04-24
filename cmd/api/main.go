@@ -17,14 +17,10 @@ package main
 import (
 	"time"
 
+	"github.com/NiskuT/cross-api/internal/config"
+	"github.com/NiskuT/cross-api/internal/server"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"gitlab.com/orkys/backend/gateway/internal/config"
-	"gitlab.com/orkys/backend/gateway/internal/server"
-	"gitlab.com/orkys/backend/gateway/internal/utils"
-	billingservice "gitlab.com/orkys/backend/gateway/pkg/protobuf-generated/billing-service"
-	customerservice "gitlab.com/orkys/backend/gateway/pkg/protobuf-generated/customer-service"
-	userservice "gitlab.com/orkys/backend/gateway/pkg/protobuf-generated/user-service"
 	"golang.org/x/net/context"
 )
 
@@ -60,26 +56,9 @@ func runRestServer(_ *cobra.Command, _ []string) {
 	log.Info().Msg("Loading configuration ...")
 	cfg := config.New()
 
-	log.Info().Msg("Creating gRPC clients ...")
-	userServiceClient := utils.CreateGRPCClient(cfg.ServiceUri.UserService)
-	userService := userservice.NewUserServiceClient(userServiceClient)
-	authService := userservice.NewAuthServiceClient(userServiceClient)
-
-	billingServiceClient := utils.CreateGRPCClient(cfg.ServiceUri.BillingService)
-	invoiceService := billingservice.NewInvoiceServiceClient(billingServiceClient)
-	quoteService := billingservice.NewQuoteServiceClient(billingServiceClient)
-
-	customerServiceClient := utils.CreateGRPCClient(cfg.ServiceUri.CustomerService)
-	customerService := customerservice.NewCustomerServiceClient(customerServiceClient)
-
 	log.Info().Msg("Creating server ...")
 	server, err := server.NewServer(
 		server.ServerConfWithConfig(cfg),
-		server.ServerConfWithUserService(userService),
-		server.ServerConfWithAuthService(authService),
-		server.ServerConfWithQuoteService(quoteService),
-		server.ServerConfWithInvoiceService(invoiceService),
-		server.ServerConfWithCustomerService(customerService),
 	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create server")

@@ -10,9 +10,6 @@
 
 ```bash
 sudo apt  install golang-go
-sudo apt install -y protobuf-compiler
-go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 go install github.com/swaggo/swag/cmd/swag@latest
 ```
 
@@ -21,16 +18,6 @@ go install github.com/swaggo/swag/cmd/swag@latest
 ```bash
 export PATH="$PATH:$(go env GOPATH)/bin"
 ```
-
-### Verify the install:
-
-```bash
-protoc-gen-go --version
-protoc-gen-go-grpc --version
-```
-
-### Generate protobuf for Golang
-Then run `make generate`
 
 ### Generate documentation
 Run `make doc`
@@ -55,11 +42,11 @@ docker login registry.gitlab.com
 From the root of this project. Run:
 
 ```bash
-docker build -t registry.gitlab.com/orkys/backend/gateway:latest .
+docker build -t registry.github.com/NiskuT/cross-api:latest .
 ```
 
 ### Push the container to the registry
 
 ```bash
-docker push registry.gitlab.com/orkys/backend/gateway:latest
+docker push registry.github.com/NiskuT/cross-api:latest
 ```

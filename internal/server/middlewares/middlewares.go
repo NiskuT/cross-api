@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/NiskuT/cross-api/internal/domain/entity"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"gitlab.com/orkys/backend/gateway/internal/domain/entity"
 )
 
 func Authentication(secretKey string) gin.HandlerFunc {
