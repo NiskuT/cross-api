@@ -19,8 +19,9 @@ import (
 type ServerConfiguration func(s *Server) error
 
 type Server struct {
-	conf        *config.Config
-	userService service.UserService
+	conf               *config.Config
+	userService        service.UserService
+	competitionService service.CompetitionService
 }
 
 func NewServer(configs ...ServerConfiguration) (*Server, error) {
@@ -43,6 +44,13 @@ func ServerConfWithUserService(userService service.UserService) ServerConfigurat
 func ServerConfWithConfig(conf *config.Config) ServerConfiguration {
 	return func(s *Server) error {
 		s.conf = conf
+		return nil
+	}
+}
+
+func ServerConfWithCompetitionService(competitionService service.CompetitionService) ServerConfiguration {
+	return func(s *Server) error {
+		s.competitionService = competitionService
 		return nil
 	}
 }
