@@ -20,6 +20,10 @@ func (s *Scale) GetCategory() string {
 	return s.scale.Category
 }
 
+func (s *Scale) GetZone() string {
+	return s.scale.Zone
+}
+
 func (s *Scale) GetPointsDoor1() int32 {
 	return s.scale.PointsDoor1
 }
@@ -50,6 +54,10 @@ func (s *Scale) SetCompetitionID(competitionID int32) {
 
 func (s *Scale) SetCategory(category string) {
 	s.scale.Category = category
+}
+
+func (s *Scale) SetZone(zone string) {
+	s.scale.Zone = zone
 }
 
 func (s *Scale) SetPointsDoor1(points int32) {

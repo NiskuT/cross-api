@@ -4,6 +4,7 @@ package entity
 type Scale struct {
 	CompetitionID int32
 	Category      string
+	Zone          string
 	PointsDoor1   int32
 	PointsDoor2   int32
 	PointsDoor3   int32

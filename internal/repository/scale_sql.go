@@ -32,6 +32,7 @@ func NewSQLScaleRepository(db *sql.DB) repo.ScaleRepository {
 type Scale struct {
 	CompetitionID int32
 	Category      string
+	Zone          string
 	PointsDoor1   int32
 	PointsDoor2   int32
 	PointsDoor3   int32
@@ -43,7 +44,7 @@ type Scale struct {
 // GetScale retrieves a scale by competition ID and category
 func (r *SQLScaleRepository) GetScale(ctx context.Context, competitionID int32, category string) (*aggregate.Scale, error) {
 	query := `
-		SELECT competition_id, category, points_door1, points_door2, points_door3, points_door4, points_door5, points_door6
+		SELECT competition_id, category, zone, points_door1, points_door2, points_door3, points_door4, points_door5, points_door6
 		FROM scales
 		WHERE competition_id = ? AND category = ?
 	`
@@ -53,6 +54,7 @@ func (r *SQLScaleRepository) GetScale(ctx context.Context, competitionID int32, 
 	err := row.Scan(
 		&scale.CompetitionID,
 		&scale.Category,
+		&scale.Zone,
 		&scale.PointsDoor1,
 		&scale.PointsDoor2,
 		&scale.PointsDoor3,
@@ -71,6 +73,7 @@ func (r *SQLScaleRepository) GetScale(ctx context.Context, competitionID int32, 
 	scaleAggregate := aggregate.NewScale()
 	scaleAggregate.SetCompetitionID(scale.CompetitionID)
 	scaleAggregate.SetCategory(scale.Category)
+	scaleAggregate.SetZone(scale.Zone)
 	scaleAggregate.SetPointsDoor1(scale.PointsDoor1)
 	scaleAggregate.SetPointsDoor2(scale.PointsDoor2)
 	scaleAggregate.SetPointsDoor3(scale.PointsDoor3)
@@ -84,8 +87,8 @@ func (r *SQLScaleRepository) GetScale(ctx context.Context, competitionID int32, 
 // CreateScale creates a new scale
 func (r *SQLScaleRepository) CreateScale(ctx context.Context, scale *aggregate.Scale) error {
 	query := `
-		INSERT INTO scales (competition_id, category, points_door1, points_door2, points_door3, points_door4, points_door5, points_door6)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO scales (competition_id, category, zone, points_door1, points_door2, points_door3, points_door4, points_door5, points_door6)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	_, err := r.db.ExecContext(
@@ -93,6 +96,7 @@ func (r *SQLScaleRepository) CreateScale(ctx context.Context, scale *aggregate.S
 		query,
 		scale.GetCompetitionID(),
 		scale.GetCategory(),
+		scale.GetZone(),
 		scale.GetPointsDoor1(),
 		scale.GetPointsDoor2(),
 		scale.GetPointsDoor3(),
@@ -116,13 +120,14 @@ func (r *SQLScaleRepository) CreateScale(ctx context.Context, scale *aggregate.S
 func (r *SQLScaleRepository) UpdateScale(ctx context.Context, scale *aggregate.Scale) error {
 	query := `
 		UPDATE scales
-		SET points_door1 = ?, points_door2 = ?, points_door3 = ?, points_door4 = ?, points_door5 = ?, points_door6 = ?
+		SET zone = ?, points_door1 = ?, points_door2 = ?, points_door3 = ?, points_door4 = ?, points_door5 = ?, points_door6 = ?
 		WHERE competition_id = ? AND category = ?
 	`
 
 	result, err := r.db.ExecContext(
 		ctx,
 		query,
+		scale.GetZone(),
 		scale.GetPointsDoor1(),
 		scale.GetPointsDoor2(),
 		scale.GetPointsDoor3(),

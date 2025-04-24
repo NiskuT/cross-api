@@ -41,6 +41,7 @@ const CreateScalesTableQuery = `
 CREATE TABLE IF NOT EXISTS scales (
     competition_id INT NOT NULL,
     category VARCHAR(100) NOT NULL,
+    zone VARCHAR(100) NOT NULL,
     points_door1 INT NOT NULL,
     points_door2 INT NOT NULL,
     points_door3 INT NOT NULL,
