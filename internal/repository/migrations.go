@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS runs (
     door6 BOOLEAN NOT NULL DEFAULT false,
     penality INT NOT NULL DEFAULT 0,
     chrono_sec INT NOT NULL DEFAULT 0,
+    referee_id INT NOT NULL DEFAULT 0,
     PRIMARY KEY (competition_id, run_number, dossard),
     FOREIGN KEY (competition_id, dossard) REFERENCES participants(competition_id, dossard_number) ON DELETE CASCADE
 );

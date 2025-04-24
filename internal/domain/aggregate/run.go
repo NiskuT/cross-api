@@ -72,6 +72,11 @@ func (r *Run) GetChronoSec() int32 {
 	return r.run.ChronoSec
 }
 
+// GetRefereeId returns the referee ID
+func (r *Run) GetRefereeId() int32 {
+	return r.run.RefereeId
+}
+
 // SetCompetitionID sets the competition ID
 func (r *Run) SetCompetitionID(competitionID int32) {
 	r.run.CompetitionID = competitionID
@@ -130,4 +135,9 @@ func (r *Run) SetPenality(penality int32) {
 // SetChronoSec sets the chrono seconds
 func (r *Run) SetChronoSec(chronoSec int32) {
 	r.run.ChronoSec = chronoSec
+}
+
+// SetRefereeId sets the referee ID
+func (r *Run) SetRefereeId(refereeId int32) {
+	r.run.RefereeId = refereeId
 }

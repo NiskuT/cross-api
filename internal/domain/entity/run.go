@@ -13,4 +13,5 @@ type Run struct {
 	Door6         bool
 	Penality      int32
 	ChronoSec     int32
+	RefereeId     int32
 }
