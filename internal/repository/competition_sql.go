@@ -79,7 +79,7 @@ func (r *SQLCompetitionRepository) GetCompetition(ctx context.Context, id int32)
 }
 
 // CreateCompetition creates a new competition
-func (r *SQLCompetitionRepository) CreateCompetition(ctx context.Context, competition *aggregate.Competition) error {
+func (r *SQLCompetitionRepository) CreateCompetition(ctx context.Context, competition *aggregate.Competition) (int32, error) {
 	query := `
 		INSERT INTO competitions (name, description, date, location, organizer, contact)
 		VALUES (?, ?, ?, ?, ?, ?)
@@ -99,9 +99,9 @@ func (r *SQLCompetitionRepository) CreateCompetition(ctx context.Context, compet
 	if err != nil {
 		// Check for duplicate key error
 		if isDuplicateKeyError(err) {
-			return ErrDuplicateCompetition
+			return 0, ErrDuplicateCompetition
 		}
-		return err
+		return 0, err
 	}
 
 	// Get the auto-incremented ID
@@ -109,7 +109,7 @@ func (r *SQLCompetitionRepository) CreateCompetition(ctx context.Context, compet
 		competition.SetID(int32(id))
 	}
 
-	return nil
+	return competition.GetID(), nil
 }
 
 // UpdateCompetition updates an existing competition
