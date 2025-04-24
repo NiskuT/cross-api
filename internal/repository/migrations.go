@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS runs (
     door4 BOOLEAN NOT NULL DEFAULT false,
     door5 BOOLEAN NOT NULL DEFAULT false,
     door6 BOOLEAN NOT NULL DEFAULT false,
-    penalty INT NOT NULL DEFAULT 0,
+    penality INT NOT NULL DEFAULT 0,
     chrono_sec INT NOT NULL DEFAULT 0,
     PRIMARY KEY (competition_id, run_number, dossard),
     FOREIGN KEY (competition_id, dossard) REFERENCES participants(competition_id, dossard_number) ON DELETE CASCADE
@@ -100,6 +100,25 @@ CREATE TABLE IF NOT EXISTS runs (
 // DropRunsTableQuery drops the runs table
 const DropRunsTableQuery = `
 DROP TABLE IF EXISTS runs;
+`
+
+// CreateLiverankingsTableQuery creates the liverankings table
+const CreateLiverankingsTableQuery = `
+CREATE TABLE IF NOT EXISTS liverankings (
+    competition_id INT NOT NULL,
+    dossard_number INT NOT NULL,
+    number_of_runs INT NOT NULL DEFAULT 0,
+    total_points INT NOT NULL DEFAULT 0,
+    penality INT NOT NULL DEFAULT 0,
+    chrono_sec INT NOT NULL DEFAULT 0,
+    PRIMARY KEY (competition_id, dossard_number),
+    FOREIGN KEY (competition_id, dossard_number) REFERENCES participants(competition_id, dossard_number) ON DELETE CASCADE
+);
+`
+
+// DropLiverankingsTableQuery drops the liverankings table
+const DropLiverankingsTableQuery = `
+DROP TABLE IF EXISTS liverankings;
 `
 
 // SetupDatabase creates necessary tables for the application

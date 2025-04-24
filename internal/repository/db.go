@@ -60,5 +60,11 @@ func InitializeDatabase(db *sql.DB) error {
 		return fmt.Errorf("failed to create runs table: %w", err)
 	}
 
+	// Create liverankings table
+	_, err = db.Exec(CreateLiverankingsTableQuery)
+	if err != nil {
+		return fmt.Errorf("failed to create liverankings table: %w", err)
+	}
+
 	return nil
 }
