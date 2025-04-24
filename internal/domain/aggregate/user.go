@@ -1,6 +1,10 @@
 package aggregate
 
-import "github.com/NiskuT/cross-api/internal/domain/entity"
+import (
+	"strings"
+
+	"github.com/NiskuT/cross-api/internal/domain/entity"
+)
 
 // User is the aggregate root for user domain
 type User struct {
@@ -70,4 +74,26 @@ func (u *User) SetPasswordHash(passwordHash string) {
 // SetRole sets the user role
 func (u *User) SetRole(role string) {
 	u.user.Role = role
+}
+
+func (u *User) AddRole(newRole string) {
+	// Check if the user already has this role
+	roles := strings.Split(u.GetRole(), ",")
+	for _, role := range roles {
+		if strings.TrimSpace(role) == newRole {
+			// User already has this role
+			return
+		}
+	}
+
+	// Add the new role
+	var updatedRoles string
+	if u.GetRole() == "" {
+		updatedRoles = newRole
+	} else {
+		updatedRoles = u.GetRole() + "," + newRole
+	}
+
+	// Update the user
+	u.SetRole(updatedRoles)
 }

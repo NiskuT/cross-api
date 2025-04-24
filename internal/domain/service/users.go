@@ -11,4 +11,5 @@ type UserService interface {
 	RefreshToken(ctx context.Context, refreshToken string) (*aggregate.JwtToken, error)
 	AddUserToCompetition(ctx context.Context, email string, competitionID int32) error
 	InviteUser(ctx context.Context, firstName, lastName, email string, competitionID int32) error
+	SetUserAsAdmin(ctx context.Context, email string, competitionID int32) (*aggregate.JwtToken, error)
 }

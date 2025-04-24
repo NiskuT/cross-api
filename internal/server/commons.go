@@ -1,9 +1,14 @@
 package server
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+)
+
+var (
+	ErrUnauthorized = errors.New("unauthorized")
 )
 
 func getPagination(c *gin.Context) (int32, int32) {

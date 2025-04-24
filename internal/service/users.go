@@ -219,31 +219,30 @@ func (s *UserService) AddUserToCompetition(ctx context.Context, email string, co
 	// Create the new role
 	newRole := fmt.Sprintf("referee:%d", competitionID)
 
-	// Get existing roles
-	currentRoles := user.GetRole()
-
-	// Check if the user already has this role
-	roles := strings.Split(currentRoles, ",")
-	for _, role := range roles {
-		if strings.TrimSpace(role) == newRole {
-			// User already has this role
-			return nil
-		}
-	}
-
-	// Add the new role
-	var updatedRoles string
-	if currentRoles == "" {
-		updatedRoles = newRole
-	} else {
-		updatedRoles = currentRoles + "," + newRole
-	}
-
-	// Update the user
-	user.SetRole(updatedRoles)
-
+	user.AddRole(newRole)
 	// Save the changes
 	return s.userRepo.UpdateUser(ctx, user)
+}
+
+func (s *UserService) SetUserAsAdmin(ctx context.Context, email string, competitionID int32) (*aggregate.JwtToken, error) {
+	// Get the user
+	user, err := s.userRepo.GetUserByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the user as admin
+	newRole := fmt.Sprintf("admin:%d", competitionID)
+	user.AddRole(newRole)
+
+	// Save the changes
+	err = s.userRepo.UpdateUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate new tokens
+	return s.generateTokens(user)
 }
 
 // InviteUser creates a new user with a referee role for a specific competition and sends an invitation email
