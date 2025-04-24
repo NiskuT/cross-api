@@ -12,8 +12,8 @@ import (
 var (
 	// ErrScaleNotFound is returned when a scale cannot be found
 	ErrScaleNotFound = errors.New("scale not found")
-	// ErrDuplicateScale is returned when a scale with the same competition ID and category already exists
-	ErrDuplicateScale = errors.New("scale with this competition ID and category already exists")
+	// ErrDuplicateScale is returned when a scale with the same competition ID, category, and zone already exists
+	ErrDuplicateScale = errors.New("scale with this competition ID, category, and zone already exists")
 )
 
 // SQLScaleRepository is an implementation of the ScaleRepository interface that uses SQL
@@ -41,16 +41,16 @@ type Scale struct {
 	PointsDoor6   int32
 }
 
-// GetScale retrieves a scale by competition ID and category
-func (r *SQLScaleRepository) GetScale(ctx context.Context, competitionID int32, category string) (*aggregate.Scale, error) {
+// GetScale retrieves a scale by its primary key (competition ID, category, zone)
+func (r *SQLScaleRepository) GetScale(ctx context.Context, competitionID int32, category string, zone string) (*aggregate.Scale, error) {
 	query := `
 		SELECT competition_id, category, zone, points_door1, points_door2, points_door3, points_door4, points_door5, points_door6
 		FROM scales
-		WHERE competition_id = ? AND category = ?
+		WHERE competition_id = ? AND category = ? AND zone = ?
 	`
 
 	var scale Scale
-	row := r.db.QueryRowContext(ctx, query, competitionID, category)
+	row := r.db.QueryRowContext(ctx, query, competitionID, category, zone)
 	err := row.Scan(
 		&scale.CompetitionID,
 		&scale.Category,
@@ -120,14 +120,13 @@ func (r *SQLScaleRepository) CreateScale(ctx context.Context, scale *aggregate.S
 func (r *SQLScaleRepository) UpdateScale(ctx context.Context, scale *aggregate.Scale) error {
 	query := `
 		UPDATE scales
-		SET zone = ?, points_door1 = ?, points_door2 = ?, points_door3 = ?, points_door4 = ?, points_door5 = ?, points_door6 = ?
-		WHERE competition_id = ? AND category = ?
+		SET points_door1 = ?, points_door2 = ?, points_door3 = ?, points_door4 = ?, points_door5 = ?, points_door6 = ?
+		WHERE competition_id = ? AND category = ? AND zone = ?
 	`
 
 	result, err := r.db.ExecContext(
 		ctx,
 		query,
-		scale.GetZone(),
 		scale.GetPointsDoor1(),
 		scale.GetPointsDoor2(),
 		scale.GetPointsDoor3(),
@@ -136,6 +135,7 @@ func (r *SQLScaleRepository) UpdateScale(ctx context.Context, scale *aggregate.S
 		scale.GetPointsDoor6(),
 		scale.GetCompetitionID(),
 		scale.GetCategory(),
+		scale.GetZone(),
 	)
 
 	if err != nil {
@@ -154,14 +154,14 @@ func (r *SQLScaleRepository) UpdateScale(ctx context.Context, scale *aggregate.S
 	return nil
 }
 
-// DeleteScale deletes a scale by competition ID and category
-func (r *SQLScaleRepository) DeleteScale(ctx context.Context, competitionID int32, category string) error {
+// DeleteScale deletes a scale by its primary key
+func (r *SQLScaleRepository) DeleteScale(ctx context.Context, competitionID int32, category string, zone string) error {
 	query := `
 		DELETE FROM scales
-		WHERE competition_id = ? AND category = ?
+		WHERE competition_id = ? AND category = ? AND zone = ?
 	`
 
-	result, err := r.db.ExecContext(ctx, query, competitionID, category)
+	result, err := r.db.ExecContext(ctx, query, competitionID, category, zone)
 	if err != nil {
 		return err
 	}

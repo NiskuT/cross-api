@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS scales (
     points_door4 INT NOT NULL,
     points_door5 INT NOT NULL,
     points_door6 INT NOT NULL,
-    PRIMARY KEY (competition_id, category),
+    PRIMARY KEY (competition_id, category, zone),
     FOREIGN KEY (competition_id) REFERENCES competitions(id) ON DELETE CASCADE
 );
 `
