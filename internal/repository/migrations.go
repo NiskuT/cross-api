@@ -1,0 +1,79 @@
+package repository
+
+// CreateParticipantsTableQuery creates the participants table
+const CreateParticipantsTableQuery = `
+CREATE TABLE IF NOT EXISTS participants (
+    competition_id INT NOT NULL,
+    dossard_number INT NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    PRIMARY KEY (competition_id, dossard_number)
+);
+`
+
+// DropParticipantsTableQuery drops the participants table
+const DropParticipantsTableQuery = `
+DROP TABLE IF EXISTS participants;
+`
+
+// CreateCompetitionsTableQuery creates the competitions table
+const CreateCompetitionsTableQuery = `
+CREATE TABLE IF NOT EXISTS competitions (
+    id INT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    date VARCHAR(50) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    organizer VARCHAR(255) NOT NULL,
+    contact VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id)
+);
+`
+
+// DropCompetitionsTableQuery drops the competitions table
+const DropCompetitionsTableQuery = `
+DROP TABLE IF EXISTS competitions;
+`
+
+// CreateScalesTableQuery creates the scales table
+const CreateScalesTableQuery = `
+CREATE TABLE IF NOT EXISTS scales (
+    competition_id INT NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    points_door1 INT NOT NULL,
+    points_door2 INT NOT NULL,
+    points_door3 INT NOT NULL,
+    points_door4 INT NOT NULL,
+    points_door5 INT NOT NULL,
+    points_door6 INT NOT NULL,
+    PRIMARY KEY (competition_id, category),
+    FOREIGN KEY (competition_id) REFERENCES competitions(id) ON DELETE CASCADE
+);
+`
+
+// DropScalesTableQuery drops the scales table
+const DropScalesTableQuery = `
+DROP TABLE IF EXISTS scales;
+`
+
+// SetupDatabase creates necessary tables for the application
+func SetupDatabase(db interface{}) error {
+	// The actual implementation depends on the database/sql package or ORM being used
+	// For a basic implementation with database/sql:
+	/*
+		_, err := db.(*sql.DB).Exec(CreateCompetitionsTableQuery)
+		if err != nil {
+			return err
+		}
+		_, err = db.(*sql.DB).Exec(CreateParticipantsTableQuery)
+		if err != nil {
+			return err
+		}
+		_, err = db.(*sql.DB).Exec(CreateScalesTableQuery)
+		return err
+	*/
+
+	// This is a placeholder - implement based on the actual DB interface used in the project
+	return nil
+}
