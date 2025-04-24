@@ -63,6 +63,8 @@ func (r *SQLLiverankingRepository) UpsertLiveranking(ctx context.Context, livera
 		return err
 	}
 
+	// If the liveranking doesn't exist, we need to create it
+
 	// Check if participant exists
 	participantQuery := `
 		SELECT EXISTS(
@@ -77,23 +79,7 @@ func (r *SQLLiverankingRepository) UpsertLiveranking(ctx context.Context, livera
 	}
 
 	if !participantExists {
-		// Create participant first
-		insertParticipantQuery := `
-			INSERT INTO participants (competition_id, dossard_number, first_name, last_name, category)
-			VALUES (?, ?, ?, ?, ?)
-		`
-		_, err = r.db.ExecContext(
-			ctx,
-			insertParticipantQuery,
-			liveranking.GetCompetitionID(),
-			liveranking.GetDossard(),
-			liveranking.GetFirstName(),
-			liveranking.GetLastName(),
-			liveranking.GetCategory(),
-		)
-		if err != nil {
-			return err
-		}
+		return ErrParticipantNotFound
 	}
 
 	// Insert new liveranking
@@ -115,13 +101,25 @@ func (r *SQLLiverankingRepository) UpsertLiveranking(ctx context.Context, livera
 }
 
 // ListLiveranking lists liveranking entries sorted by desc total points, asc penality, and desc chrono sec
-func (r *SQLLiverankingRepository) ListLiveranking(ctx context.Context, competitionID, pageNumber, pageSize int32) ([]*aggregate.Liveranking, error) {
+func (r *SQLLiverankingRepository) ListLiveranking(ctx context.Context, competitionID, pageNumber, pageSize int32) ([]*aggregate.Liveranking, int32, error) {
 	if pageSize <= 0 {
 		pageSize = 10 // Default page size
 	}
 
 	if pageNumber <= 0 {
 		pageNumber = 1 // Default page number
+	}
+
+	// Get total count first
+	countQuery := `
+		SELECT COUNT(*)
+		FROM liverankings l
+		WHERE l.competition_id = ?
+	`
+	var totalCount int32
+	err := r.db.QueryRowContext(ctx, countQuery, competitionID).Scan(&totalCount)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	offset := (pageNumber - 1) * pageSize
@@ -138,7 +136,7 @@ func (r *SQLLiverankingRepository) ListLiveranking(ctx context.Context, competit
 
 	rows, err := r.db.QueryContext(ctx, query, competitionID, pageSize, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -161,7 +159,7 @@ func (r *SQLLiverankingRepository) ListLiveranking(ctx context.Context, competit
 			&chronoSec,
 		)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		liveranking.SetCompetitionID(competitionID)
@@ -178,8 +176,8 @@ func (r *SQLLiverankingRepository) ListLiveranking(ctx context.Context, competit
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return liverankings, nil
+	return liverankings, totalCount, nil
 }
