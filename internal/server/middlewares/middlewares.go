@@ -96,3 +96,17 @@ func GetUser(c *gin.Context) (*entity.UserToken, error) {
 
 	return &userClaims, nil
 }
+
+func HasRole(c *gin.Context, role string) bool {
+	user, err := GetUser(c)
+	if err != nil {
+		return false
+	}
+
+	for _, r := range user.Roles {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}

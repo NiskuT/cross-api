@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -154,4 +155,42 @@ func (s *UserService) generateTokens(user *aggregate.User) (*aggregate.JwtToken,
 	jwtToken.SetRefreshToken(refreshTokenString)
 
 	return jwtToken, nil
+}
+
+// AddUserToCompetition adds the referee role for a specific competition to a user
+func (s *UserService) AddUserToCompetition(ctx context.Context, email string, competitionID int32) error {
+	// Get the user
+	user, err := s.userRepo.GetUserByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+
+	// Create the new role
+	newRole := fmt.Sprintf("referee:%d", competitionID)
+
+	// Get existing roles
+	currentRoles := user.GetRole()
+
+	// Check if the user already has this role
+	roles := strings.Split(currentRoles, ",")
+	for _, role := range roles {
+		if strings.TrimSpace(role) == newRole {
+			// User already has this role
+			return nil
+		}
+	}
+
+	// Add the new role
+	var updatedRoles string
+	if currentRoles == "" {
+		updatedRoles = newRole
+	} else {
+		updatedRoles = currentRoles + "," + newRole
+	}
+
+	// Update the user
+	user.SetRole(updatedRoles)
+
+	// Save the changes
+	return s.userRepo.UpdateUser(ctx, user)
 }
