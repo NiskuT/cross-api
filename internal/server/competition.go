@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/NiskuT/cross-api/internal/domain/aggregate"
 	"github.com/NiskuT/cross-api/internal/domain/models"
@@ -160,4 +161,60 @@ func (s *Server) addZoneToCompetition(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Zone added to competition"})
+}
+
+// addParticipantsToCompetition godoc
+// @Summary      Add participants to a competition
+// @Description  Adds multiple participants to a competition from an Excel file
+// @Tags         competition
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        competitionID  formData  int     true  "Competition ID"
+// @Param        category       formData  string  true  "Participant category"
+// @Param        file           formData  file    true  "Excel file with participants data"
+// @Success      200           {object}  gin.H                        "Successfully added participants"
+// @Failure      400           {object}  models.ErrorResponse         "Bad Request"
+// @Failure      401           {object}  models.ErrorResponse         "Unauthorized (invalid credentials)"
+// @Failure      500           {object}  models.ErrorResponse         "Internal Server Error"
+// @Router       /competition/participants [post]
+func (s *Server) addParticipantsToCompetition(c *gin.Context) {
+	competitionIDStr := c.PostForm("competitionID")
+	if competitionIDStr == "" {
+		RespondError(c, http.StatusBadRequest, errors.New("competition ID is required"))
+		return
+	}
+
+	competitionIDInt, err := strconv.ParseInt(competitionIDStr, 10, 32)
+	if err != nil {
+		RespondError(c, http.StatusBadRequest, errors.New("invalid competition ID format"))
+		return
+	}
+	competitionID := int32(competitionIDInt)
+
+	category := c.PostForm("category")
+	if category == "" {
+		RespondError(c, http.StatusBadRequest, errors.New("category is required"))
+		return
+	}
+
+	role := fmt.Sprintf("admin:%d", competitionID)
+	if !middlewares.HasRole(c, role) {
+		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+		return
+	}
+
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		RespondError(c, http.StatusBadRequest, errors.New("excel file is required"))
+		return
+	}
+	defer file.Close()
+
+	err = s.competitionService.AddParticipants(c, competitionID, category, file)
+	if err != nil {
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Participants added to competition"})
 }
