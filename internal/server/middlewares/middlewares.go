@@ -36,7 +36,27 @@ func Authentication(secretKey string) gin.HandlerFunc {
 			}
 			return []byte(secretKey), nil
 		})
-		if err != nil || !token.Valid {
+
+		// Handle specific token errors
+		if err != nil {
+			// Check specifically for token expiration
+			if validationErr, ok := err.(*jwt.ValidationError); ok {
+				if validationErr.Errors&jwt.ValidationErrorExpired != 0 {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+						"error": "Token expired",
+						"code":  "token_expired",
+					})
+					return
+				}
+			}
+
+			// Generic error for other token validation failures
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			return
+		}
+
+		// Check if token is valid
+		if !token.Valid {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return
 		}
