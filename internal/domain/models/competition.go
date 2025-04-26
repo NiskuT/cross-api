@@ -34,3 +34,11 @@ type CompetitionScaleInput struct {
 	PointsDoor5   int32  `json:"points_door5" binding:"required"`
 	PointsDoor6   int32  `json:"points_door6" binding:"required"`
 }
+
+// RefereeInput represents the input for adding a referee to a competition
+type RefereeInput struct {
+	CompetitionID int32  `json:"competition_id" binding:"required"`
+	FirstName     string `json:"first_name" binding:"required"`
+	LastName      string `json:"last_name" binding:"required"`
+	Email         string `json:"email" binding:"required,email"`
+}

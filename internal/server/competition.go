@@ -218,3 +218,57 @@ func (s *Server) addParticipantsToCompetition(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Participants added to competition"})
 }
+
+// addRefereeToCompetition godoc
+// @Summary      Add a referee to a competition
+// @Description  Invites a user as a referee to a competition
+// @Tags         competition
+// @Accept       json
+// @Produce      json
+// @Param        referee  body       models.RefereeInput  true  "Referee data"
+// @Success      200      {object}   gin.H               "Successfully added referee"
+// @Failure      400      {object}   models.ErrorResponse "Bad Request"
+// @Failure      401      {object}   models.ErrorResponse "Unauthorized (invalid credentials)"
+// @Failure      500      {object}   models.ErrorResponse "Internal Server Error"
+// @Router       /competition/referee [post]
+func (s *Server) addRefereeToCompetition(c *gin.Context) {
+	var refereeInput models.RefereeInput
+	if err := c.ShouldBindJSON(&refereeInput); err != nil {
+		RespondError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	if refereeInput.CompetitionID == 0 {
+		RespondError(c, http.StatusBadRequest, errors.New("competition ID is required"))
+		return
+	}
+
+	if refereeInput.FirstName == "" {
+		RespondError(c, http.StatusBadRequest, errors.New("first name is required"))
+		return
+	}
+
+	if refereeInput.LastName == "" {
+		RespondError(c, http.StatusBadRequest, errors.New("last name is required"))
+		return
+	}
+
+	if refereeInput.Email == "" {
+		RespondError(c, http.StatusBadRequest, errors.New("email is required"))
+		return
+	}
+
+	role := fmt.Sprintf("admin:%d", refereeInput.CompetitionID)
+	if !middlewares.HasRole(c, role) {
+		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+		return
+	}
+
+	err := s.userService.InviteUser(c, refereeInput.FirstName, refereeInput.LastName, refereeInput.Email, refereeInput.CompetitionID)
+	if err != nil {
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Referee added to competition"})
+}
