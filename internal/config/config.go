@@ -26,7 +26,6 @@ const (
 )
 
 type Service struct {
-	Name string
 	Port int
 }
 
@@ -97,7 +96,9 @@ func (c *Config) Load() {
 	}
 
 	c.Service.Port = srvPort
-	c.Service.Name = getStringFromEnv("SERVICE_NAME")
+
+	c.Database.Name = getStringFromEnv("DB_NAME")
+	c.Database.Uri = getStringFromEnv("DB_URI")
 
 	c.Jwt.SecretKey = getStringFromEnv("JWT_SECRET_KEY")
 
