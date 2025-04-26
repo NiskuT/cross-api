@@ -109,6 +109,122 @@
                 }
             }
         },
+        "/competition/participants": {
+            "post": {
+                "description": "Adds multiple participants to a competition from an Excel file",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "competition"
+                ],
+                "summary": "Add participants to a competition",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Competition ID",
+                        "name": "competitionID",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Participant category",
+                        "name": "category",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Excel file with participants data",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully added participants",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (invalid credentials)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/competition/referee": {
+            "post": {
+                "description": "Invites a user as a referee to a competition",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "competition"
+                ],
+                "summary": "Add a referee to a competition",
+                "parameters": [
+                    {
+                        "description": "Referee data",
+                        "name": "referee",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RefereeInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully added referee",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (invalid credentials)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/competition/zone": {
             "post": {
                 "description": "Adds a zone to a competition",
@@ -148,6 +264,69 @@
                     },
                     "401": {
                         "description": "Unauthorized (invalid credentials)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/competition/{competitionID}/participant/{dossard}": {
+            "get": {
+                "description": "Retrieves a participant's information based on dossard number and competition ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "participant"
+                ],
+                "summary": "Get participant information",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Competition ID",
+                        "name": "competitionID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Dossard Number",
+                        "name": "dossard",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns participant data",
+                        "schema": {
+                            "$ref": "#/definitions/models.ParticipantResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (invalid credentials)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Participant not found",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -250,6 +429,64 @@
                     },
                     "401": {
                         "description": "Unauthorized (missing or invalid token)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/run": {
+            "post": {
+                "description": "Creates a new run and updates the liveranking",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "run"
+                ],
+                "summary": "Create a new run",
+                "parameters": [
+                    {
+                        "description": "Run data",
+                        "name": "run",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RunInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Returns created run data",
+                        "schema": {
+                            "$ref": "#/definitions/models.RunResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -397,6 +634,133 @@
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ParticipantResponse": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "competition_id": {
+                    "type": "integer"
+                },
+                "dossard_number": {
+                    "type": "integer"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RefereeInput": {
+            "type": "object",
+            "required": [
+                "competition_id",
+                "email",
+                "first_name",
+                "last_name"
+            ],
+            "properties": {
+                "competition_id": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RunInput": {
+            "type": "object",
+            "required": [
+                "competition_id",
+                "dossard",
+                "zone"
+            ],
+            "properties": {
+                "chrono_sec": {
+                    "type": "integer"
+                },
+                "competition_id": {
+                    "type": "integer"
+                },
+                "door1": {
+                    "type": "boolean"
+                },
+                "door2": {
+                    "type": "boolean"
+                },
+                "door3": {
+                    "type": "boolean"
+                },
+                "door4": {
+                    "type": "boolean"
+                },
+                "door5": {
+                    "type": "boolean"
+                },
+                "door6": {
+                    "type": "boolean"
+                },
+                "dossard": {
+                    "type": "integer"
+                },
+                "penality": {
+                    "type": "integer"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RunResponse": {
+            "type": "object",
+            "properties": {
+                "chrono_sec": {
+                    "type": "integer"
+                },
+                "competition_id": {
+                    "type": "integer"
+                },
+                "door1": {
+                    "type": "boolean"
+                },
+                "door2": {
+                    "type": "boolean"
+                },
+                "door3": {
+                    "type": "boolean"
+                },
+                "door4": {
+                    "type": "boolean"
+                },
+                "door5": {
+                    "type": "boolean"
+                },
+                "door6": {
+                    "type": "boolean"
+                },
+                "dossard": {
+                    "type": "integer"
+                },
+                "penality": {
+                    "type": "integer"
+                },
+                "run_number": {
+                    "type": "integer"
+                },
+                "zone": {
                     "type": "string"
                 }
             }

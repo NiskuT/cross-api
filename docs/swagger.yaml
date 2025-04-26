@@ -92,6 +92,91 @@ definitions:
     - email
     - password
     type: object
+  models.ParticipantResponse:
+    properties:
+      category:
+        type: string
+      competition_id:
+        type: integer
+      dossard_number:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+    type: object
+  models.RefereeInput:
+    properties:
+      competition_id:
+        type: integer
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+    required:
+    - competition_id
+    - email
+    - first_name
+    - last_name
+    type: object
+  models.RunInput:
+    properties:
+      chrono_sec:
+        type: integer
+      competition_id:
+        type: integer
+      door1:
+        type: boolean
+      door2:
+        type: boolean
+      door3:
+        type: boolean
+      door4:
+        type: boolean
+      door5:
+        type: boolean
+      door6:
+        type: boolean
+      dossard:
+        type: integer
+      penality:
+        type: integer
+      zone:
+        type: string
+    required:
+    - competition_id
+    - dossard
+    - zone
+    type: object
+  models.RunResponse:
+    properties:
+      chrono_sec:
+        type: integer
+      competition_id:
+        type: integer
+      door1:
+        type: boolean
+      door2:
+        type: boolean
+      door3:
+        type: boolean
+      door4:
+        type: boolean
+      door5:
+        type: boolean
+      door6:
+        type: boolean
+      dossard:
+        type: integer
+      penality:
+        type: integer
+      run_number:
+        type: integer
+      zone:
+        type: string
+    type: object
 host: localhost:9000
 info:
   contact:
@@ -164,6 +249,126 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Create a competition
+      tags:
+      - competition
+  /competition/{competitionID}/participant/{dossard}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a participant's information based on dossard number and
+        competition ID
+      parameters:
+      - description: Competition ID
+        in: path
+        name: competitionID
+        required: true
+        type: integer
+      - description: Dossard Number
+        in: path
+        name: dossard
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns participant data
+          schema:
+            $ref: '#/definitions/models.ParticipantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Participant not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get participant information
+      tags:
+      - participant
+  /competition/participants:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds multiple participants to a competition from an Excel file
+      parameters:
+      - description: Competition ID
+        in: formData
+        name: competitionID
+        required: true
+        type: integer
+      - description: Participant category
+        in: formData
+        name: category
+        required: true
+        type: string
+      - description: Excel file with participants data
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully added participants
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Add participants to a competition
+      tags:
+      - competition
+  /competition/referee:
+    post:
+      consumes:
+      - application/json
+      description: Invites a user as a referee to a competition
+      parameters:
+      - description: Referee data
+        in: body
+        name: referee
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefereeInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully added referee
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Add a referee to a competition
       tags:
       - competition
   /competition/zone:
@@ -269,4 +474,42 @@ paths:
       summary: Refresh a JWT token
       tags:
       - auth
+  /run:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new run and updates the liveranking
+      parameters:
+      - description: Run data
+        in: body
+        name: run
+        required: true
+        schema:
+          $ref: '#/definitions/models.RunInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Returns created run data
+          schema:
+            $ref: '#/definitions/models.RunResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Create a new run
+      tags:
+      - run
 swagger: "2.0"
