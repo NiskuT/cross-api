@@ -212,6 +212,12 @@ paths:
       consumes:
       - application/json
       description: Lists all competitions
+      parameters:
+      - description: Bearer <access_token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -239,6 +245,11 @@ paths:
       - application/json
       description: Creates a new competition and returns a JWT token.
       parameters:
+      - description: Bearer <access_token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Competition data
         in: body
         name: competition
@@ -274,6 +285,11 @@ paths:
       description: Retrieves a participant's information based on dossard number and
         competition ID
       parameters:
+      - description: Bearer <access_token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Competition ID
         in: path
         name: competitionID
@@ -316,6 +332,11 @@ paths:
       - application/json
       description: Lists all available zones for a competition
       parameters:
+      - description: Bearer <access_token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Competition ID
         in: path
         name: competitionID
@@ -353,6 +374,11 @@ paths:
       - multipart/form-data
       description: Adds multiple participants to a competition from an Excel file
       parameters:
+      - description: Bearer <access_token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Competition ID
         in: formData
         name: competitionID
@@ -396,6 +422,11 @@ paths:
       - application/json
       description: Invites a user as a referee to a competition
       parameters:
+      - description: Bearer <access_token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Referee data
         in: body
         name: referee
@@ -430,6 +461,11 @@ paths:
       - application/json
       description: Adds a zone to a competition
       parameters:
+      - description: Bearer <access_token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Competition data
         in: body
         name: competition
@@ -533,6 +569,11 @@ paths:
       - application/json
       description: Creates a new run and updates the liveranking
       parameters:
+      - description: Bearer <access_token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Run data
         in: body
         name: run

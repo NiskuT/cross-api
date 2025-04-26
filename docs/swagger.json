@@ -31,6 +31,15 @@
                     "competition"
                 ],
                 "summary": "List competitions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Returns competition data",
@@ -71,6 +80,13 @@
                 ],
                 "summary": "Create a competition",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Competition data",
                         "name": "competition",
@@ -123,6 +139,13 @@
                 ],
                 "summary": "Add participants to a competition",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Competition ID",
@@ -188,6 +211,13 @@
                 "summary": "Add a referee to a competition",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Referee data",
                         "name": "referee",
                         "in": "body",
@@ -240,6 +270,13 @@
                 "summary": "Add a zone to a competition",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Competition data",
                         "name": "competition",
                         "in": "body",
@@ -291,6 +328,13 @@
                 ],
                 "summary": "Get participant information",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Competition ID",
@@ -354,6 +398,13 @@
                 ],
                 "summary": "List zones for a competition",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Competition ID",
@@ -512,6 +563,13 @@
                 ],
                 "summary": "Create a new run",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Run data",
                         "name": "run",

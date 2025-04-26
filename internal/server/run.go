@@ -20,6 +20,7 @@ import (
 // @Tags         participant
 // @Accept       json
 // @Produce      json
+// @Param        Authorization  header    string  true  "Bearer <access_token>"
 // @Param        competitionID  path      int     true  "Competition ID"
 // @Param        dossard        path      int     true  "Dossard Number"
 // @Success      200            {object}  models.ParticipantResponse  "Returns participant data"
@@ -77,6 +78,7 @@ func (s *Server) getParticipant(c *gin.Context) {
 // @Tags         run
 // @Accept       json
 // @Produce      json
+// @Param        Authorization  header    string  true  "Bearer <access_token>"
 // @Param        run  body       models.RunInput  true  "Run data"
 // @Success      201  {object}   models.RunResponse     "Returns created run data"
 // @Failure      400  {object}   models.ErrorResponse   "Bad Request"

@@ -37,6 +37,15 @@ const docTemplate = `{
                     "competition"
                 ],
                 "summary": "List competitions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Returns competition data",
@@ -77,6 +86,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create a competition",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Competition data",
                         "name": "competition",
@@ -129,6 +145,13 @@ const docTemplate = `{
                 ],
                 "summary": "Add participants to a competition",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Competition ID",
@@ -194,6 +217,13 @@ const docTemplate = `{
                 "summary": "Add a referee to a competition",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Referee data",
                         "name": "referee",
                         "in": "body",
@@ -246,6 +276,13 @@ const docTemplate = `{
                 "summary": "Add a zone to a competition",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Competition data",
                         "name": "competition",
                         "in": "body",
@@ -297,6 +334,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get participant information",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Competition ID",
@@ -360,6 +404,13 @@ const docTemplate = `{
                 ],
                 "summary": "List zones for a competition",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Competition ID",
@@ -518,6 +569,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create a new run",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003caccess_token\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Run data",
                         "name": "run",
