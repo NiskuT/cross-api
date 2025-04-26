@@ -182,3 +182,14 @@ func (s *CompetitionService) ListCompetitions(ctx context.Context) ([]*aggregate
 
 	return competitions, nil
 }
+
+// GetParticipant retrieves a participant by competition ID and dossard number
+func (s *CompetitionService) GetParticipant(ctx context.Context, competitionID int32, dossardNumber int32) (*aggregate.Participant, error) {
+	// Get participant from repository
+	participant, err := s.participantRepo.GetParticipant(ctx, competitionID, dossardNumber)
+	if err != nil {
+		return nil, err
+	}
+
+	return participant, nil
+}

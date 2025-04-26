@@ -94,6 +94,7 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 	router.POST("/competition/zone", s.addZoneToCompetition)
 	router.POST("/competition/participants", s.addParticipantsToCompetition)
 	router.POST("/competition/referee", s.addRefereeToCompetition)
+	router.GET("/competition/:competitionID/participant/:dossard", s.getParticipant)
 	return router
 }
 
