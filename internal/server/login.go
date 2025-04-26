@@ -28,7 +28,7 @@ const (
 // @Accept       json
 // @Produce      json
 // @Param        loginRequest  body      models.LoginUser              true  "Login credentials"
-// @Success      200           {object}  userservice.User     				 "Returns user information and tokens in cookies"
+// @Success      200           {object}  gin.H       				 						"Returns user information and tokens in cookies"
 // @Failure      400           {object}  models.ErrorResponse          "Bad Request"
 // @Failure      401           {object}  models.ErrorResponse          "Unauthorized (invalid credentials)"
 // @Failure      500           {object}  models.ErrorResponse          "Internal Server Error"
@@ -64,7 +64,7 @@ func (s *Server) login(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        Authorization  header    string  true  "Bearer <refresh_token>"
-// @Success      200            {object}  userservice.JwtToken   "New access/refresh token pair in http-only cookies"
+// @Success      200            {object}  gin.H   "New access/refresh token pair in http-only cookies"
 // @Failure      400            {object}  models.ErrorResponse   "Bad Request"
 // @Failure      401            {object}  models.ErrorResponse   "Unauthorized (missing or invalid token)"
 // @Failure      500            {object}  models.ErrorResponse   "Internal Server Error"

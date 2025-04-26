@@ -173,3 +173,12 @@ func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID 
 
 	return nil
 }
+
+func (s *CompetitionService) ListCompetitions(ctx context.Context) ([]*aggregate.Competition, error) {
+	competitions, err := s.competitionRepo.ListCompetitions(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return competitions, nil
+}

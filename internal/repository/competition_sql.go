@@ -171,3 +171,41 @@ func (r *SQLCompetitionRepository) DeleteCompetition(ctx context.Context, id int
 
 	return nil
 }
+
+// ListCompetitions lists all competitions
+func (r *SQLCompetitionRepository) ListCompetitions(ctx context.Context) ([]*aggregate.Competition, error) {
+
+	query := `
+		SELECT id, name, description, date, location, organizer, contact
+		FROM competitions
+		ORDER BY date DESC
+	`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	competitions := []*aggregate.Competition{}
+
+	for rows.Next() {
+		var competition Competition
+		if err := rows.Scan(&competition.ID, &competition.Name, &competition.Description, &competition.Date, &competition.Location, &competition.Organizer, &competition.Contact); err != nil {
+			return nil, err
+		}
+
+		competitionAggregate := aggregate.NewCompetition()
+		competitionAggregate.SetID(competition.ID)
+		competitionAggregate.SetName(competition.Name)
+		competitionAggregate.SetDescription(competition.Description)
+		competitionAggregate.SetDate(competition.Date)
+		competitionAggregate.SetLocation(competition.Location)
+		competitionAggregate.SetOrganizer(competition.Organizer)
+		competitionAggregate.SetContact(competition.Contact)
+		competitions = append(competitions, competitionAggregate)
+	}
+
+	return competitions, nil
+}

@@ -18,3 +18,19 @@ type CompetitionResponse struct {
 	Organizer   string `json:"organizer"`
 	Contact     string `json:"contact"`
 }
+
+type CompetitionListResponse struct {
+	Competitions []*CompetitionResponse `json:"competitions"`
+}
+
+type CompetitionScaleInput struct {
+	CompetitionID int32  `json:"competition_id" binding:"required"`
+	Category      string `json:"category" binding:"required"`
+	Zone          string `json:"zone" binding:"required"`
+	PointsDoor1   int32  `json:"points_door1" binding:"required"`
+	PointsDoor2   int32  `json:"points_door2" binding:"required"`
+	PointsDoor3   int32  `json:"points_door3" binding:"required"`
+	PointsDoor4   int32  `json:"points_door4" binding:"required"`
+	PointsDoor5   int32  `json:"points_door5" binding:"required"`
+	PointsDoor6   int32  `json:"points_door6" binding:"required"`
+}

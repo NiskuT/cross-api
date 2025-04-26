@@ -1,10 +1,3 @@
-# Directories
-PROTO_DIR       := proto/protobuf-definition
-OUT_DIR         := pkg/protobuf-generated
-
-# Collect all .proto files
-PROTOS          := $(shell find $(PROTO_DIR) -name "*.proto")
-
 .PHONY: all generate clean
 
 all: generate doc
@@ -23,14 +16,14 @@ clean:
 	@echo "Removed docs"
 
 build:
-	CGO_ENABLED=0 go build -o gateway cmd/gateway/main.go
+	CGO_ENABLED=0 go build -o api cmd/api/main.go
 
 start:
-	export APP_ENV=local && go run cmd/gateway/main.go rest
+	export APP_ENV=local && go run cmd/api/main.go rest
 
 doc:
 	@echo "You need to install swaggo/swag using go install github.com/swaggo/swag/cmd/swag@latest"
-	swag init --dir ./cmd/gateway,./internal/server --output ./docs --parseDependency --parseInternal
+	swag init --dir ./cmd/api,./internal/server --output ./docs --parseDependency --parseInternal
 
 help:
 	@echo "Please use 'make <target>' where <target> is one of"

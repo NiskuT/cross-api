@@ -24,9 +24,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/customers": {
+        "/competition": {
             "get": {
-                "description": "Returns a list of customers with pagination.",
+                "description": "Lists all competitions",
                 "consumes": [
                     "application/json"
                 ],
@@ -34,35 +34,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "customer"
+                    "competition"
                 ],
-                "summary": "Returns a list of customers.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number for pagination",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of customers per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
+                "summary": "List competitions",
                 "responses": {
                     "200": {
-                        "description": "The customer list and pagination details",
+                        "description": "Returns competition data",
                         "schema": {
-                            "$ref": "#/definitions/customerservice.ListCustomersResponse"
+                            "$ref": "#/definitions/models.CompetitionListResponse"
                         }
                     },
                     "400": {
@@ -72,7 +51,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Unauthorized (invalid credentials)",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -86,7 +65,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Creates a new customer with the provided details.",
+                "description": "Creates a new competition and returns a JWT token.",
                 "consumes": [
                     "application/json"
                 ],
@@ -94,32 +73,25 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "customer"
+                    "competition"
                 ],
-                "summary": "Creates a new customer.",
+                "summary": "Create a competition",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "The customer object",
-                        "name": "customer",
+                        "description": "Competition data",
+                        "name": "competition",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.CreateCustomerRequest"
+                            "$ref": "#/definitions/models.Competition"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "The created customer object",
+                    "200": {
+                        "description": "Returns competition data",
                         "schema": {
-                            "$ref": "#/definitions/models.Customer"
+                            "$ref": "#/definitions/models.CompetitionResponse"
                         }
                     },
                     "400": {
@@ -129,7 +101,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Unauthorized (invalid credentials)",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -143,245 +115,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/customers/{id}": {
-            "get": {
-                "description": "Returns a customer by ID with all the details.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "customer"
-                ],
-                "summary": "Returns a customer by ID.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Customer ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The customer object",
-                        "schema": {
-                            "$ref": "#/definitions/models.Customer"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Deletes a customer by ID.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "customer"
-                ],
-                "summary": "Deletes a customer.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Customer ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success message",
-                        "schema": {
-                            "$ref": "#/definitions/commons.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "description": "Updates a customer with the provided details.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "customer"
-                ],
-                "summary": "Updates a customer.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Customer ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "The customer object",
-                        "name": "customer",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.UpdateCustomerRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The updated customer object",
-                        "schema": {
-                            "$ref": "#/definitions/models.Customer"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice": {
-            "get": {
-                "description": "Returns a list of invoices with pagination.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "invoice"
-                ],
-                "summary": "Returns a list of invoices.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number for pagination",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of invoices per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The invoice list and pagination details",
-                        "schema": {
-                            "$ref": "#/definitions/models.Invoices"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            },
+        "/competition/zone": {
             "post": {
-                "description": "Creates a new invoice with the provided details.",
+                "description": "Adds a zone to a competition",
                 "consumes": [
                     "application/json"
                 ],
@@ -389,208 +125,25 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "invoice"
+                    "competition"
                 ],
-                "summary": "Creates a new invoice.",
+                "summary": "Add a zone to a competition",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "The invoice object",
-                        "name": "invoice",
+                        "description": "Competition data",
+                        "name": "competition",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.CreateInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "The created invoice object",
-                        "schema": {
-                            "$ref": "#/definitions/models.Invoice"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/{id}": {
-            "get": {
-                "description": "Returns an invoice by ID with all the details.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "invoice"
-                ],
-                "summary": "Returns an invoice by ID.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The invoice object",
-                        "schema": {
-                            "$ref": "#/definitions/models.Invoice"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Deletes an invoice by ID.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "invoice"
-                ],
-                "summary": "Deletes an invoice.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success message",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "description": "Updates an invoice with the provided details.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "invoice"
-                ],
-                "summary": "Updates an invoice.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "The invoice object",
-                        "name": "invoice",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.UpdateInvoiceRequest"
+                            "$ref": "#/definitions/models.CompetitionScaleInput"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "The updated invoice object",
+                        "description": "Returns competition data",
                         "schema": {
-                            "$ref": "#/definitions/models.Invoice"
+                            "$ref": "#/definitions/gin.H"
                         }
                     },
                     "400": {
@@ -600,69 +153,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/list": {
-            "get": {
-                "description": "Returns a list of users, limited by a query param (default 10).",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "List users",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number for pagination",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of events per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "List of users",
-                        "schema": {
-                            "$ref": "#/definitions/userservice.UsersResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
+                        "description": "Unauthorized (invalid credentials)",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -704,7 +195,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Returns user information and tokens in cookies",
                         "schema": {
-                            "$ref": "#/definitions/userservice.User"
+                            "$ref": "#/definitions/gin.H"
                         }
                     },
                     "400": {
@@ -715,408 +206,6 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized (invalid credentials)",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/oauth/{provider}/callback": {
-            "get": {
-                "description": "Processes the OAuth callback from the provider, calls the user service, and returns a login response with JWT tokens.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Process the OAuth callback from a provider",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "OAuth provider (custom or google)",
-                        "name": "provider",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "State parameter for CSRF validation",
-                        "name": "state",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Authorization code (and any other provider parameters)",
-                        "name": "code",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User login response with tokens in cookies",
-                        "schema": {
-                            "$ref": "#/definitions/userservice.User"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/oauth/{provider}/initiate": {
-            "get": {
-                "description": "Initiates an OAuth flow (for providers \"custom\" or \"google\") by calling the user service and returning the provider’s auth URL.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Initiate an OAuth flow for a provider",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "OAuth provider (custom or google)",
-                        "name": "provider",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Optional state parameter. If omitted, a new state will be generated.",
-                        "name": "state",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OAuth initiation response",
-                        "schema": {
-                            "$ref": "#/definitions/userservice.OAuthInitiateResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/quote": {
-            "get": {
-                "description": "Returns a list of quotes with pagination.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "quote"
-                ],
-                "summary": "Returns a list of quotes.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number for pagination",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of events per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The quote object list, and pagination details",
-                        "schema": {
-                            "$ref": "#/definitions/models.Quotes"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Creates a new quote with the provided details.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "quote"
-                ],
-                "summary": "Creates a new quote.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "The quote object",
-                        "name": "quote",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.CreateQuoteRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "The created quote object",
-                        "schema": {
-                            "$ref": "#/definitions/models.Quote"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/quote/{id}": {
-            "get": {
-                "description": "Returns a quote by ID with all the details.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "quote"
-                ],
-                "summary": "Returns a quote by ID.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Quote ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The quote object",
-                        "schema": {
-                            "$ref": "#/definitions/models.Quote"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Deletes a quote by ID.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "quote"
-                ],
-                "summary": "Deletes a quote.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Quote ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success message",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "description": "Updates a quote with the provided details.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "quote"
-                ],
-                "summary": "Updates a quote.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Quote ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "The quote object",
-                        "name": "quote",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.UpdateQuoteRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The updated quote object",
-                        "schema": {
-                            "$ref": "#/definitions/models.Quote"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -1156,118 +245,7 @@ const docTemplate = `{
                     "200": {
                         "description": "New access/refresh token pair in http-only cookies",
                         "schema": {
-                            "$ref": "#/definitions/userservice.JwtToken"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized (missing or invalid token)",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/register": {
-            "post": {
-                "description": "Creates a new user in the system and returns the user object with tokens.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Register a new user",
-                "parameters": [
-                    {
-                        "description": "Registration details",
-                        "name": "registerRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.CreateUser"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created user with tokens in cookies",
-                        "schema": {
-                            "$ref": "#/definitions/userservice.User"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict (user already exists)",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/user": {
-            "patch": {
-                "description": "Updates the user details (first name, last name, password and avatar URL) if they are not empty.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Update user details",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "User details to update",
-                        "name": "UpdateUserRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.UpdateUser"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Created user with tokens",
-                        "schema": {
-                            "$ref": "#/definitions/commons.Response"
+                            "$ref": "#/definitions/gin.H"
                         }
                     },
                     "400": {
@@ -1293,253 +271,112 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "commons.Metadata": {
+        "gin.H": {
             "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "integer"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "type": "integer"
-                },
-                "deleted_by": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "integer"
-                },
-                "updated_by": {
-                    "type": "string"
-                }
-            }
+            "additionalProperties": true
         },
-        "commons.Pagination": {
-            "type": "object",
-            "properties": {
-                "page_number": {
-                    "type": "integer"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "total_item": {
-                    "type": "integer"
-                },
-                "total_pages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "commons.Response": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "customerservice.Customer": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "$ref": "#/definitions/commons.Metadata"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "picture_url": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "social_name": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "customerservice.ListCustomersResponse": {
-            "type": "object",
-            "properties": {
-                "customers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/customerservice.Customer"
-                    }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/commons.Pagination"
-                }
-            }
-        },
-        "models.CreateCustomerRequest": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "picture_url": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "social_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.CreateInvoiceRequest": {
-            "type": "object",
-            "properties": {
-                "customer_id": {
-                    "type": "string"
-                },
-                "due_date": {
-                    "type": "integer"
-                },
-                "invoice_date": {
-                    "type": "integer"
-                },
-                "invoice_number": {
-                    "type": "string"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/valueobject.InvoiceItem"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "quote_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.CreateQuoteRequest": {
-            "type": "object",
-            "properties": {
-                "customer_id": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/valueobject.QuoteItem"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "quote_date": {
-                    "type": "integer"
-                },
-                "valid_until": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.CreateUser": {
+        "models.Competition": {
             "type": "object",
             "required": [
-                "email",
-                "first_name",
-                "last_name",
-                "password"
+                "name"
             ],
             "properties": {
-                "email": {
+                "contact": {
                     "type": "string"
                 },
-                "first_name": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Customer": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "country": {
+                "date": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
-                "email": {
+                "location": {
                     "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "$ref": "#/definitions/valueobject.Metadata"
                 },
                 "name": {
                     "type": "string"
                 },
-                "phone": {
+                "organizer": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CompetitionListResponse": {
+            "type": "object",
+            "properties": {
+                "competitions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.CompetitionResponse"
+                    }
+                }
+            }
+        },
+        "models.CompetitionResponse": {
+            "type": "object",
+            "properties": {
+                "contact": {
                     "type": "string"
                 },
-                "picture_url": {
+                "date": {
                     "type": "string"
                 },
-                "postal_code": {
+                "description": {
                     "type": "string"
                 },
-                "social_name": {
+                "id": {
+                    "type": "integer"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "organizer": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CompetitionScaleInput": {
+            "type": "object",
+            "required": [
+                "category",
+                "competition_id",
+                "points_door1",
+                "points_door2",
+                "points_door3",
+                "points_door4",
+                "points_door5",
+                "points_door6",
+                "zone"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "competition_id": {
+                    "type": "integer"
+                },
+                "points_door1": {
+                    "type": "integer"
+                },
+                "points_door2": {
+                    "type": "integer"
+                },
+                "points_door3": {
+                    "type": "integer"
+                },
+                "points_door4": {
+                    "type": "integer"
+                },
+                "points_door5": {
+                    "type": "integer"
+                },
+                "points_door6": {
+                    "type": "integer"
+                },
+                "zone": {
                     "type": "string"
                 }
             }
@@ -1552,64 +389,6 @@ const docTemplate = `{
                 },
                 "message": {
                     "type": "string"
-                }
-            }
-        },
-        "models.Invoice": {
-            "type": "object",
-            "properties": {
-                "customer": {
-                    "$ref": "#/definitions/models.Customer"
-                },
-                "due_date": {
-                    "type": "integer"
-                },
-                "invoice_date": {
-                    "type": "integer"
-                },
-                "invoice_id": {
-                    "type": "string"
-                },
-                "invoice_number": {
-                    "type": "string"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/valueobject.InvoiceItem"
-                    }
-                },
-                "metadata": {
-                    "$ref": "#/definitions/valueobject.Metadata"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "payment_date": {
-                    "type": "integer"
-                },
-                "payment_method": {
-                    "type": "string"
-                },
-                "payment_status": {
-                    "$ref": "#/definitions/valueobject.PaymentStatus"
-                },
-                "quote_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Invoices": {
-            "type": "object",
-            "properties": {
-                "invoices": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Invoice"
-                    }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/commons.Pagination"
                 }
             }
         },
@@ -1627,317 +406,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "models.Quote": {
-            "type": "object",
-            "properties": {
-                "customer": {
-                    "$ref": "#/definitions/models.Customer"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/valueobject.QuoteItem"
-                    }
-                },
-                "metadata": {
-                    "$ref": "#/definitions/valueobject.Metadata"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "quote_date": {
-                    "type": "integer"
-                },
-                "status": {
-                    "$ref": "#/definitions/valueobject.QuoteStatus"
-                },
-                "valid_until": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.Quotes": {
-            "type": "object",
-            "properties": {
-                "pagination": {
-                    "$ref": "#/definitions/commons.Pagination"
-                },
-                "quotes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Quote"
-                    }
-                }
-            }
-        },
-        "models.UpdateCustomerRequest": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "picture_url": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "social_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.UpdateInvoiceRequest": {
-            "type": "object",
-            "properties": {
-                "customer_id": {
-                    "type": "string"
-                },
-                "due_date": {
-                    "type": "integer"
-                },
-                "invoice_date": {
-                    "type": "integer"
-                },
-                "invoice_number": {
-                    "type": "string"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/valueobject.InvoiceItem"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "payment_status": {
-                    "$ref": "#/definitions/valueobject.PaymentStatus"
-                },
-                "quote_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.UpdateQuoteRequest": {
-            "type": "object",
-            "properties": {
-                "customer_id": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/valueobject.QuoteItem"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "quote_date": {
-                    "type": "integer"
-                },
-                "status": {
-                    "$ref": "#/definitions/valueobject.QuoteStatus"
-                },
-                "valid_until": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.UpdateUser": {
-            "type": "object",
-            "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "userservice.JwtToken": {
-            "type": "object",
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "userservice.OAuthInitiateResponse": {
-            "type": "object",
-            "properties": {
-                "auth_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "userservice.User": {
-            "type": "object",
-            "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "$ref": "#/definitions/commons.Metadata"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "userservice.UsersResponse": {
-            "type": "object",
-            "properties": {
-                "pagination": {
-                    "$ref": "#/definitions/commons.Pagination"
-                },
-                "users": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/userservice.User"
-                    }
-                }
-            }
-        },
-        "valueobject.InvoiceItem": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "quantity": {
-                    "type": "integer"
-                },
-                "tax_rate": {
-                    "type": "number"
-                },
-                "unit_price": {
-                    "type": "number"
-                }
-            }
-        },
-        "valueobject.Metadata": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "integer"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "type": "integer"
-                },
-                "deleted_by": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "integer"
-                },
-                "updated_by": {
-                    "type": "string"
-                }
-            }
-        },
-        "valueobject.PaymentStatus": {
-            "type": "string",
-            "enum": [
-                "PAYMENT_STATUS_UNSPECIFIED",
-                "UNPAID",
-                "PAID",
-                "OVERDUE"
-            ],
-            "x-enum-varnames": [
-                "PaymentStatusUnspecified",
-                "PaymentStatusUnpaid",
-                "PaymentStatusPaid",
-                "PaymentStatusOverdue"
-            ]
-        },
-        "valueobject.QuoteItem": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "quantity": {
-                    "type": "integer"
-                },
-                "tax_rate": {
-                    "type": "number"
-                },
-                "unit_price": {
-                    "type": "number"
-                }
-            }
-        },
-        "valueobject.QuoteStatus": {
-            "type": "string",
-            "enum": [
-                "QUOTE_STATUS_UNSPECIFIED",
-                "PENDING",
-                "APPROVED",
-                "REJECTED"
-            ],
-            "x-enum-varnames": [
-                "QuoteStatusUnspecified",
-                "QuoteStatusPending",
-                "QuoteStatusApproved",
-                "QuoteStatusRejected"
-            ]
         }
     }
 }`

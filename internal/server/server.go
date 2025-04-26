@@ -90,7 +90,8 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 	router.Use(middlewares.Authentication(cfg.Jwt.SecretKey))
 
 	router.POST("/competition", s.createCompetition)
-
+	router.GET("/competition", s.listCompetitions)
+	router.POST("/competition/zone", s.addZoneToCompetition)
 	return router
 }
 
