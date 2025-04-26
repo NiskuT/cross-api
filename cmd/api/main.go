@@ -73,7 +73,7 @@ func runRestServer(_ *cobra.Command, _ []string) {
 	scaleRepo := repository.NewSQLScaleRepository(db)
 	liverankingRepo := repository.NewSQLLiverankingRepository(db)
 	participantRepo := repository.NewSQLParticipantRepository(db)
-
+	runRepo := repository.NewSQLRunRepository(db)
 	log.Info().Msg("Initializing services ...")
 	userService := service.NewUserService(
 		service.UserConfWithUserRepo(userRepo),
@@ -88,11 +88,20 @@ func runRestServer(_ *cobra.Command, _ []string) {
 		service.CompetitionConfWithConfig(cfg),
 	)
 
+	runService := service.NewRunService(
+		service.RunConfWithRunRepo(runRepo),
+		service.RunConfWithParticipantRepo(participantRepo),
+		service.RunConfWithLiverankingRepo(liverankingRepo),
+		service.RunConfWithScaleRepo(scaleRepo),
+		service.RunConfWithConfig(cfg),
+	)
+
 	log.Info().Msg("Creating server ...")
 	server, err := server.NewServer(
 		server.ServerConfWithConfig(cfg),
 		server.ServerConfWithUserService(userService),
 		server.ServerConfWithCompetitionService(competitionService),
+		server.ServerConfWithRunService(runService),
 	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create server")

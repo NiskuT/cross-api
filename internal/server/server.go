@@ -22,6 +22,7 @@ type Server struct {
 	conf               *config.Config
 	userService        service.UserService
 	competitionService service.CompetitionService
+	runService         service.RunService
 }
 
 func NewServer(configs ...ServerConfiguration) (*Server, error) {
@@ -51,6 +52,13 @@ func ServerConfWithConfig(conf *config.Config) ServerConfiguration {
 func ServerConfWithCompetitionService(competitionService service.CompetitionService) ServerConfiguration {
 	return func(s *Server) error {
 		s.competitionService = competitionService
+		return nil
+	}
+}
+
+func ServerConfWithRunService(runService service.RunService) ServerConfiguration {
+	return func(s *Server) error {
+		s.runService = runService
 		return nil
 	}
 }
