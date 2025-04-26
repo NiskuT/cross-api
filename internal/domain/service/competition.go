@@ -13,4 +13,5 @@ type CompetitionService interface {
 	AddParticipants(ctx context.Context, competitionID int32, category string, excelFile io.Reader) error
 	ListCompetitions(ctx context.Context) ([]*aggregate.Competition, error)
 	GetParticipant(ctx context.Context, competitionID int32, dossardNumber int32) (*aggregate.Participant, error)
+	ListZones(ctx context.Context, competitionID int32) ([]aggregate.ZoneInfo, error)
 }

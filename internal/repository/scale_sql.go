@@ -177,3 +177,38 @@ func (r *SQLScaleRepository) DeleteScale(ctx context.Context, competitionID int3
 
 	return nil
 }
+
+// ListZones lists all zones for a competition
+func (r *SQLScaleRepository) ListZones(ctx context.Context, competitionID int32) ([]aggregate.ZoneInfo, error) {
+	query := `
+		SELECT DISTINCT zone, category
+		FROM scales
+		WHERE competition_id = ?
+		ORDER BY category, zone
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, competitionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var zones []aggregate.ZoneInfo
+	for rows.Next() {
+		var zone, category string
+		if err := rows.Scan(&zone, &category); err != nil {
+			return nil, err
+		}
+
+		zoneInfo := aggregate.NewZoneInfo()
+		zoneInfo.SetZone(zone)
+		zoneInfo.SetCategory(category)
+		zones = append(zones, *zoneInfo)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return zones, nil
+}

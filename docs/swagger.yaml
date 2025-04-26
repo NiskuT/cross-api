@@ -177,6 +177,22 @@ definitions:
       zone:
         type: string
     type: object
+  models.ZoneResponse:
+    properties:
+      category:
+        type: string
+      zone:
+        type: string
+    type: object
+  models.ZonesListResponse:
+    properties:
+      competition_id:
+        type: integer
+      zones:
+        items:
+          $ref: '#/definitions/models.ZoneResponse'
+        type: array
+    type: object
 host: localhost:9000
 info:
   contact:
@@ -294,6 +310,43 @@ paths:
       summary: Get participant information
       tags:
       - participant
+  /competition/{competitionID}/zones:
+    get:
+      consumes:
+      - application/json
+      description: Lists all available zones for a competition
+      parameters:
+      - description: Competition ID
+        in: path
+        name: competitionID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns list of zones
+          schema:
+            $ref: '#/definitions/models.ZonesListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Competition not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: List zones for a competition
+      tags:
+      - competition
   /competition/participants:
     post:
       consumes:

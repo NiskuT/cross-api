@@ -8,6 +8,7 @@ import (
 
 	"github.com/NiskuT/cross-api/internal/domain/aggregate"
 	"github.com/NiskuT/cross-api/internal/domain/models"
+	"github.com/NiskuT/cross-api/internal/repository"
 	"github.com/NiskuT/cross-api/internal/server/middlewares"
 	"github.com/gin-gonic/gin"
 )
@@ -271,4 +272,61 @@ func (s *Server) addRefereeToCompetition(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Referee added to competition"})
+}
+
+// listZones godoc
+// @Summary      List zones for a competition
+// @Description  Lists all available zones for a competition
+// @Tags         competition
+// @Accept       json
+// @Produce      json
+// @Param        competitionID  path      int     true  "Competition ID"
+// @Success      200           {object}  models.ZonesListResponse     "Returns list of zones"
+// @Failure      400           {object}  models.ErrorResponse         "Bad Request"
+// @Failure      401           {object}  models.ErrorResponse         "Unauthorized (invalid credentials)"
+// @Failure      404           {object}  models.ErrorResponse         "Competition not found"
+// @Failure      500           {object}  models.ErrorResponse         "Internal Server Error"
+// @Router       /competition/{competitionID}/zones [get]
+func (s *Server) listZones(c *gin.Context) {
+	competitionIDStr := c.Param("competitionID")
+
+	competitionID, err := strconv.ParseInt(competitionIDStr, 10, 32)
+	if err != nil {
+		RespondError(c, http.StatusBadRequest, errors.New("invalid competition ID"))
+		return
+	}
+
+	// Check if user has access to the competition
+	hasRole := middlewares.HasRole(c, fmt.Sprintf("admin:%d", competitionID)) ||
+		middlewares.HasRole(c, fmt.Sprintf("referee:%d", competitionID))
+	if !hasRole {
+		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+		return
+	}
+
+	// Get zones from service
+	zones, err := s.competitionService.ListZones(c, int32(competitionID))
+	if err != nil {
+		if errors.Is(err, repository.ErrCompetitionNotFound) {
+			RespondError(c, http.StatusNotFound, errors.New("competition not found"))
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Build response
+	response := models.ZonesListResponse{
+		CompetitionID: int32(competitionID),
+		Zones:         make([]models.ZoneResponse, 0, len(zones)),
+	}
+
+	for _, zone := range zones {
+		response.Zones = append(response.Zones, models.ZoneResponse{
+			Zone:     zone.GetZone(),
+			Category: zone.GetCategory(),
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
 }

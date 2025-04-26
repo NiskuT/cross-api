@@ -340,6 +340,62 @@
                 }
             }
         },
+        "/competition/{competitionID}/zones": {
+            "get": {
+                "description": "Lists all available zones for a competition",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "competition"
+                ],
+                "summary": "List zones for a competition",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Competition ID",
+                        "name": "competitionID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns list of zones",
+                        "schema": {
+                            "$ref": "#/definitions/models.ZonesListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (invalid credentials)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Competition not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "Authenticates a user with email and password and returns a JWT token.",
@@ -762,6 +818,31 @@
                 },
                 "zone": {
                     "type": "string"
+                }
+            }
+        },
+        "models.ZoneResponse": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ZonesListResponse": {
+            "type": "object",
+            "properties": {
+                "competition_id": {
+                    "type": "integer"
+                },
+                "zones": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ZoneResponse"
+                    }
                 }
             }
         }

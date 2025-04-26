@@ -193,3 +193,15 @@ func (s *CompetitionService) GetParticipant(ctx context.Context, competitionID i
 
 	return participant, nil
 }
+
+// ListZones lists all zones for a competition
+func (s *CompetitionService) ListZones(ctx context.Context, competitionID int32) ([]aggregate.ZoneInfo, error) {
+	// Verify the competition exists
+	_, err := s.competitionRepo.GetCompetition(ctx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get zones from repository
+	return s.scaleRepo.ListZones(ctx, competitionID)
+}

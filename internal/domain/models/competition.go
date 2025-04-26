@@ -42,3 +42,15 @@ type RefereeInput struct {
 	LastName      string `json:"last_name" binding:"required"`
 	Email         string `json:"email" binding:"required,email"`
 }
+
+// ZoneResponse represents a single zone in a competition
+type ZoneResponse struct {
+	Zone     string `json:"zone"`
+	Category string `json:"category"`
+}
+
+// ZonesListResponse represents a list of zones in a competition
+type ZonesListResponse struct {
+	CompetitionID int32          `json:"competition_id"`
+	Zones         []ZoneResponse `json:"zones"`
+}
