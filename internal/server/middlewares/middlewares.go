@@ -41,23 +41,21 @@ func parseAndValidateToken(tokenStr, secretKey string) (*jwt.Token, error) {
 }
 
 // handleExpiredToken processes refresh token logic when the access token has expired
-func handleExpiredToken(c *gin.Context, userService service.UserService) bool {
+func handleExpiredToken(c *gin.Context, userService service.UserService) (bool, error) {
 	refreshToken, err := c.Cookie(RefreshToken)
 	if err != nil || refreshToken == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Refresh token missing"})
-		return false
+		return false, errors.New("refresh token missing")
 	}
 
 	tokens, err := userService.RefreshToken(c.Request.Context(), refreshToken)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
-		return false
+		return false, errors.New("invalid refresh token")
 	}
 
 	c.SetCookie(AccessToken, tokens.GetAccessToken(), 0, "/", "", true, true)
 	c.SetCookie(RefreshToken, tokens.GetRefreshToken(), 0, "/", "", true, true)
 
-	return true
+	return true, nil
 }
 
 // extractUserFromClaims builds a UserToken from JWT claims
@@ -96,8 +94,13 @@ func extractUserFromClaims(claims jwt.MapClaims) (entity.UserToken, error) {
 
 func Authentication(secretKey string, userService service.UserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var tokenStr string
+		var err error
+		var refreshed bool
+
+	tokenValidation:
 		// Step 1: Extract access token
-		tokenStr, err := extractAccessToken(c)
+		tokenStr, err = extractAccessToken(c)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
@@ -107,13 +110,18 @@ func Authentication(secretKey string, userService service.UserService) gin.Handl
 		token, err := parseAndValidateToken(tokenStr, secretKey)
 		if err != nil {
 			// Check specifically for token expiration
-			if validationErr, ok := err.(*jwt.ValidationError); ok && validationErr.Errors&jwt.ValidationErrorExpired != 0 {
-				// Step 3: Handle expired token with refresh flow
-				if handled := handleExpiredToken(c, userService); handled {
-					c.Next()
+			if !refreshed {
+				validationErr, ok := err.(*jwt.ValidationError)
+				if ok && validationErr.Errors&jwt.ValidationErrorExpired != 0 {
+					// Step 3: Handle expired token with refresh flow
+					refreshSuccessful, refreshErr := handleExpiredToken(c, userService)
+					if refreshSuccessful {
+						refreshed = true
+						goto tokenValidation // Restart validation with new token
+					}
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": refreshErr.Error()})
 					return
 				}
-				return
 			}
 
 			// Generic error for other token validation failures
