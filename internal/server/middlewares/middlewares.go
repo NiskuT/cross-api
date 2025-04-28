@@ -4,30 +4,32 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/NiskuT/cross-api/internal/domain/entity"
+	"github.com/NiskuT/cross-api/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
 
-func Authentication(secretKey string) gin.HandlerFunc {
+const (
+	AccessToken  = "access_token"
+	RefreshToken = "refresh_token"
+)
+
+func Authentication(secretKey string, userService service.UserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// Retrieve the Authorization header.
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+		// Retrieve token from cookie
+		tokenStr, err := c.Cookie("access_token")
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization cookie missing"})
 			return
 		}
 
-		// Expect header in the format "Bearer <token>".
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header format must be Bearer {token}"})
+		if tokenStr == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Empty token"})
 			return
 		}
-		tokenStr := parts[1]
 
 		// Parse the token.
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
@@ -42,10 +44,27 @@ func Authentication(secretKey string) gin.HandlerFunc {
 			// Check specifically for token expiration
 			if validationErr, ok := err.(*jwt.ValidationError); ok {
 				if validationErr.Errors&jwt.ValidationErrorExpired != 0 {
-					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-						"error": "Token expired",
-						"code":  "token_expired",
-					})
+					refreshToken, err := c.Cookie("refresh_token")
+					if err != nil {
+						c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Refresh token missing"})
+						return
+					}
+
+					if refreshToken == "" {
+						c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Refresh token missing"})
+						return
+					}
+
+					tokens, err := userService.RefreshToken(c.Request.Context(), refreshToken)
+					if err != nil {
+						c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+						return
+					}
+
+					c.SetCookie(AccessToken, tokens.GetAccessToken(), 0, "/", "", true, true)
+					c.SetCookie(RefreshToken, tokens.GetRefreshToken(), 0, "/", "", true, true)
+
+					c.Next()
 					return
 				}
 			}
@@ -68,7 +87,7 @@ func Authentication(secretKey string) gin.HandlerFunc {
 			return
 		}
 
-		if claims.VerifyIssuer("golene-evasion.com", true) == false {
+		if !claims.VerifyIssuer("golene-evasion.com", true) {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token issuer"})
 			return
 		}

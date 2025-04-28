@@ -95,7 +95,7 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 	router.POST("/login", s.login)
 	router.GET("/refresh", s.refresh)
 
-	router.Use(middlewares.Authentication(cfg.Jwt.SecretKey))
+	router.Use(middlewares.Authentication(cfg.Jwt.SecretKey, s.userService))
 
 	router.POST("/competition", s.createCompetition)
 	router.GET("/competition", s.listCompetitions)
