@@ -40,8 +40,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Bearer \u003caccess_token\u003e",
-                        "name": "Authorization",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
                         "in": "header",
                         "required": true
                     }
@@ -88,8 +88,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Bearer \u003caccess_token\u003e",
-                        "name": "Authorization",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
                         "in": "header",
                         "required": true
                     },
@@ -147,8 +147,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Bearer \u003caccess_token\u003e",
-                        "name": "Authorization",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
                         "in": "header",
                         "required": true
                     },
@@ -218,8 +218,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Bearer \u003caccess_token\u003e",
-                        "name": "Authorization",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
                         "in": "header",
                         "required": true
                     },
@@ -277,8 +277,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Bearer \u003caccess_token\u003e",
-                        "name": "Authorization",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
                         "in": "header",
                         "required": true
                     },
@@ -336,8 +336,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Bearer \u003caccess_token\u003e",
-                        "name": "Authorization",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
                         "in": "header",
                         "required": true
                     },
@@ -406,8 +406,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Bearer \u003caccess_token\u003e",
-                        "name": "Authorization",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
                         "in": "header",
                         "required": true
                     },
@@ -505,56 +505,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/refresh": {
-            "get": {
-                "description": "Takes a refresh token and returns a new access token (and possibly a new refresh token).",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Refresh a JWT token",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003crefresh_token\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "New access/refresh token pair in http-only cookies",
-                        "schema": {
-                            "$ref": "#/definitions/gin.H"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized (missing or invalid token)",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/run": {
             "post": {
                 "description": "Creates a new run and updates the liveranking",
@@ -571,8 +521,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Bearer \u003caccess_token\u003e",
-                        "name": "Authorization",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
                         "in": "header",
                         "required": true
                     },

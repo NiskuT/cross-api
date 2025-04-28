@@ -213,9 +213,9 @@ paths:
       - application/json
       description: Lists all competitions
       parameters:
-      - description: Bearer <access_token>
+      - description: Authentication cookie
         in: header
-        name: Authorization
+        name: Cookie
         required: true
         type: string
       produces:
@@ -245,9 +245,9 @@ paths:
       - application/json
       description: Creates a new competition and returns a JWT token.
       parameters:
-      - description: Bearer <access_token>
+      - description: Authentication cookie
         in: header
-        name: Authorization
+        name: Cookie
         required: true
         type: string
       - description: Competition data
@@ -285,9 +285,9 @@ paths:
       description: Retrieves a participant's information based on dossard number and
         competition ID
       parameters:
-      - description: Bearer <access_token>
+      - description: Authentication cookie
         in: header
-        name: Authorization
+        name: Cookie
         required: true
         type: string
       - description: Competition ID
@@ -332,9 +332,9 @@ paths:
       - application/json
       description: Lists all available zones for a competition
       parameters:
-      - description: Bearer <access_token>
+      - description: Authentication cookie
         in: header
-        name: Authorization
+        name: Cookie
         required: true
         type: string
       - description: Competition ID
@@ -374,9 +374,9 @@ paths:
       - multipart/form-data
       description: Adds multiple participants to a competition from an Excel file
       parameters:
-      - description: Bearer <access_token>
+      - description: Authentication cookie
         in: header
-        name: Authorization
+        name: Cookie
         required: true
         type: string
       - description: Competition ID
@@ -422,9 +422,9 @@ paths:
       - application/json
       description: Invites a user as a referee to a competition
       parameters:
-      - description: Bearer <access_token>
+      - description: Authentication cookie
         in: header
-        name: Authorization
+        name: Cookie
         required: true
         type: string
       - description: Referee data
@@ -461,9 +461,9 @@ paths:
       - application/json
       description: Adds a zone to a competition
       parameters:
-      - description: Bearer <access_token>
+      - description: Authentication cookie
         in: header
-        name: Authorization
+        name: Cookie
         required: true
         type: string
       - description: Competition data
@@ -529,49 +529,15 @@ paths:
       summary: Log in a user
       tags:
       - auth
-  /refresh:
-    get:
-      consumes:
-      - application/json
-      description: Takes a refresh token and returns a new access token (and possibly
-        a new refresh token).
-      parameters:
-      - description: Bearer <refresh_token>
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: New access/refresh token pair in http-only cookies
-          schema:
-            $ref: '#/definitions/gin.H'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "401":
-          description: Unauthorized (missing or invalid token)
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      summary: Refresh a JWT token
-      tags:
-      - auth
   /run:
     post:
       consumes:
       - application/json
       description: Creates a new run and updates the liveranking
       parameters:
-      - description: Bearer <access_token>
+      - description: Authentication cookie
         in: header
-        name: Authorization
+        name: Cookie
         required: true
         type: string
       - description: Run data

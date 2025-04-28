@@ -19,7 +19,7 @@ import (
 // @Tags         competition
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header    string  true  "Bearer <access_token>"
+// @Param        Cookie  header string    true  "Authentication cookie"
 // @Param        competition  body       models.Competition              true  "Competition data"
 // @Success      200           {object}  models.CompetitionResponse     			 "Returns competition data"
 // @Failure      400           {object}  models.ErrorResponse          "Bad Request"
@@ -86,7 +86,7 @@ func (s *Server) createCompetition(c *gin.Context) {
 // @Tags         competition
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header    string  true  "Bearer <access_token>"
+// @Param        Cookie  header string    true  "Authentication cookie"
 // @Success      200           {object}  models.CompetitionListResponse     			 "Returns competition data"
 // @Failure      400           {object}  models.ErrorResponse          "Bad Request"
 // @Failure      401           {object}  models.ErrorResponse          "Unauthorized (invalid credentials)"
@@ -122,7 +122,7 @@ func (s *Server) listCompetitions(c *gin.Context) {
 // @Tags         competition
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header    string  true  "Bearer <access_token>"
+// @Param        Cookie  header string    true  "Authentication cookie"
 // @Param        competition  body       models.CompetitionScaleInput  true  "Competition data"
 // @Success      200           {object}  gin.H       			 						 "Returns competition data"
 // @Failure      400           {object}  models.ErrorResponse          "Bad Request"
@@ -173,7 +173,7 @@ func (s *Server) addZoneToCompetition(c *gin.Context) {
 // @Tags         competition
 // @Accept       multipart/form-data
 // @Produce      json
-// @Param        Authorization  header    string  true  "Bearer <access_token>"
+// @Param        Cookie  header string    true  "Authentication cookie"
 // @Param        competitionID  formData  int     true  "Competition ID"
 // @Param        category       formData  string  true  "Participant category"
 // @Param        file           formData  file    true  "Excel file with participants data"
@@ -230,7 +230,7 @@ func (s *Server) addParticipantsToCompetition(c *gin.Context) {
 // @Tags         competition
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header    string  true  "Bearer <access_token>"
+// @Param        Cookie  header string    true  "Authentication cookie"
 // @Param        referee  body       models.RefereeInput  true  "Referee data"
 // @Success      200      {object}   gin.H               "Successfully added referee"
 // @Failure      400      {object}   models.ErrorResponse "Bad Request"
@@ -285,7 +285,7 @@ func (s *Server) addRefereeToCompetition(c *gin.Context) {
 // @Tags         competition
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header    string  true  "Bearer <access_token>"
+// @Param        Cookie  header string    true  "Authentication cookie"
 // @Param        competitionID  path      int     true  "Competition ID"
 // @Success      200           {object}  models.ZonesListResponse     "Returns list of zones"
 // @Failure      400           {object}  models.ErrorResponse         "Bad Request"
