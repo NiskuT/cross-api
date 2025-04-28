@@ -94,10 +94,9 @@ func (s *Server) createRun(c *gin.Context) {
 	}
 
 	// Check if user has appropriate role (admin or referee for the competition)
-	hasRole := middlewares.HasRole(c, fmt.Sprintf("admin:%d", runInput.CompetitionID)) ||
-		middlewares.HasRole(c, fmt.Sprintf("referee:%d", runInput.CompetitionID))
-	if !hasRole {
-		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+	err := checkHasAccessToCompetition(c, runInput.CompetitionID)
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
 		return
 	}
 
