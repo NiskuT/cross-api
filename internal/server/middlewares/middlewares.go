@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/NiskuT/cross-api/internal/domain/entity"
-	"github.com/NiskuT/cross-api/internal/service"
+	"github.com/NiskuT/cross-api/internal/domain/service"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
