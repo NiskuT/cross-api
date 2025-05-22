@@ -7,5 +7,5 @@ type User struct {
 	FirstName    string
 	LastName     string
 	PasswordHash string
-	Role         string
+	Roles        string
 }

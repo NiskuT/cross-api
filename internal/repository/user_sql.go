@@ -35,13 +35,13 @@ type User struct {
 	FirstName    string
 	LastName     string
 	PasswordHash string
-	Role         string
+	Roles        string
 }
 
 // GetUser retrieves a user by ID
 func (r *SQLUserRepository) GetUser(ctx context.Context, id int32) (*aggregate.User, error) {
 	query := `
-		SELECT id, email, first_name, last_name, password_hash, role
+		SELECT id, email, first_name, last_name, password_hash, roles
 		FROM users
 		WHERE id = ?
 	`
@@ -54,7 +54,7 @@ func (r *SQLUserRepository) GetUser(ctx context.Context, id int32) (*aggregate.U
 		&user.FirstName,
 		&user.LastName,
 		&user.PasswordHash,
-		&user.Role,
+		&user.Roles,
 	)
 
 	if err != nil {
@@ -70,7 +70,7 @@ func (r *SQLUserRepository) GetUser(ctx context.Context, id int32) (*aggregate.U
 	userAggregate.SetFirstName(user.FirstName)
 	userAggregate.SetLastName(user.LastName)
 	userAggregate.SetPasswordHash(user.PasswordHash)
-	userAggregate.SetRole(user.Role)
+	userAggregate.SetRoles(user.Roles)
 
 	return userAggregate, nil
 }
@@ -78,7 +78,7 @@ func (r *SQLUserRepository) GetUser(ctx context.Context, id int32) (*aggregate.U
 // CreateUser creates a new user
 func (r *SQLUserRepository) CreateUser(ctx context.Context, user *aggregate.User) error {
 	query := `
-		INSERT INTO users (email, first_name, last_name, password_hash, role)
+		INSERT INTO users (email, first_name, last_name, password_hash, roles)
 		VALUES (?, ?, ?, ?, ?)
 	`
 
@@ -89,7 +89,7 @@ func (r *SQLUserRepository) CreateUser(ctx context.Context, user *aggregate.User
 		user.GetFirstName(),
 		user.GetLastName(),
 		user.GetPasswordHash(),
-		user.GetRole(),
+		user.GetRoles(),
 	)
 
 	if err != nil {
@@ -112,7 +112,7 @@ func (r *SQLUserRepository) CreateUser(ctx context.Context, user *aggregate.User
 func (r *SQLUserRepository) UpdateUser(ctx context.Context, user *aggregate.User) error {
 	query := `
 		UPDATE users
-		SET email = ?, first_name = ?, last_name = ?, password_hash = ?, role = ?
+		SET email = ?, first_name = ?, last_name = ?, password_hash = ?, roles = ?
 		WHERE id = ?
 	`
 
@@ -123,7 +123,7 @@ func (r *SQLUserRepository) UpdateUser(ctx context.Context, user *aggregate.User
 		user.GetFirstName(),
 		user.GetLastName(),
 		user.GetPasswordHash(),
-		user.GetRole(),
+		user.GetRoles(),
 		user.GetID(),
 	)
 
@@ -174,7 +174,7 @@ func (r *SQLUserRepository) DeleteUser(ctx context.Context, id int32) error {
 // GetUserByEmail retrieves a user by email
 func (r *SQLUserRepository) GetUserByEmail(ctx context.Context, email string) (*aggregate.User, error) {
 	query := `
-		SELECT id, email, first_name, last_name, password_hash, role
+		SELECT id, email, first_name, last_name, password_hash, roles
 		FROM users
 		WHERE email = ?
 	`
@@ -187,7 +187,7 @@ func (r *SQLUserRepository) GetUserByEmail(ctx context.Context, email string) (*
 		&user.FirstName,
 		&user.LastName,
 		&user.PasswordHash,
-		&user.Role,
+		&user.Roles,
 	)
 
 	if err != nil {
@@ -203,7 +203,7 @@ func (r *SQLUserRepository) GetUserByEmail(ctx context.Context, email string) (*
 	userAggregate.SetFirstName(user.FirstName)
 	userAggregate.SetLastName(user.LastName)
 	userAggregate.SetPasswordHash(user.PasswordHash)
-	userAggregate.SetRole(user.Role)
+	userAggregate.SetRoles(user.Roles)
 
 	return userAggregate, nil
 }

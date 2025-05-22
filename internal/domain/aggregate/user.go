@@ -41,9 +41,9 @@ func (u *User) GetPasswordHash() string {
 	return u.user.PasswordHash
 }
 
-// GetRole returns the user role
-func (u *User) GetRole() string {
-	return u.user.Role
+// GetRoles returns the user roles
+func (u *User) GetRoles() string {
+	return u.user.Roles
 }
 
 // SetID sets the user ID
@@ -71,14 +71,14 @@ func (u *User) SetPasswordHash(passwordHash string) {
 	u.user.PasswordHash = passwordHash
 }
 
-// SetRole sets the user role
-func (u *User) SetRole(role string) {
-	u.user.Role = role
+// SetRoles sets the user roles
+func (u *User) SetRoles(roles string) {
+	u.user.Roles = roles
 }
 
 func (u *User) AddRole(newRole string) {
 	// Check if the user already has this role
-	roles := strings.Split(u.GetRole(), ",")
+	roles := strings.Split(u.GetRoles(), ",")
 	for _, role := range roles {
 		if strings.TrimSpace(role) == newRole {
 			// User already has this role
@@ -88,12 +88,12 @@ func (u *User) AddRole(newRole string) {
 
 	// Add the new role
 	var updatedRoles string
-	if u.GetRole() == "" {
+	if u.GetRoles() == "" {
 		updatedRoles = newRole
 	} else {
-		updatedRoles = u.GetRole() + "," + newRole
+		updatedRoles = u.GetRoles() + "," + newRole
 	}
 
 	// Update the user
-	u.SetRole(updatedRoles)
+	u.SetRoles(updatedRoles)
 }

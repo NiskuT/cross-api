@@ -123,7 +123,7 @@ func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (*a
 
 // Helper function to generate JWT tokens
 func (s *UserService) generateTokens(user *aggregate.User) (*aggregate.JwtToken, error) {
-	roles := strings.Split(user.GetRole(), ",")
+	roles := strings.Split(user.GetRoles(), ",")
 
 	// Create access token
 	accessTokenClaims := jwt.MapClaims{
@@ -266,7 +266,7 @@ func (s *UserService) InviteUser(ctx context.Context, firstName, lastName, email
 
 	// Set referee role for the specified competition
 	role := fmt.Sprintf("referee:%d", competitionID)
-	user.SetRole(role)
+	user.SetRoles(role)
 
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

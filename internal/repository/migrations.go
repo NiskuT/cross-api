@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS users (
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL,
+    roles VARCHAR(500) NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY (email)
 );
