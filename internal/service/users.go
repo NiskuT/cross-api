@@ -159,6 +159,7 @@ func (s *UserService) generateTokens(user *aggregate.User) (*aggregate.JwtToken,
 	jwtToken := aggregate.NewJwtToken()
 	jwtToken.SetAccessToken(accessTokenString)
 	jwtToken.SetRefreshToken(refreshTokenString)
+	jwtToken.SetRoles(roles)
 
 	return jwtToken, nil
 }

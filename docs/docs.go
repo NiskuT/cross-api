@@ -454,7 +454,7 @@ const docTemplate = `{
             }
         },
         "/login": {
-            "post": {
+            "put": {
                 "description": "Authenticates a user with email and password and returns a JWT token.",
                 "consumes": [
                     "application/json"

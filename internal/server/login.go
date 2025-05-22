@@ -31,7 +31,7 @@ const (
 // @Failure      400           {object}  models.ErrorResponse          "Bad Request"
 // @Failure      401           {object}  models.ErrorResponse          "Unauthorized (invalid credentials)"
 // @Failure      500           {object}  models.ErrorResponse          "Internal Server Error"
-// @Router       /login [post]
+// @Router       /login [put]
 func (s *Server) login(c *gin.Context) {
 	var loginRequest models.LoginUser
 	if err := c.ShouldBindJSON(&loginRequest); err != nil {
@@ -53,5 +53,7 @@ func (s *Server) login(c *gin.Context) {
 	c.SetCookie(AccessToken, user.GetAccessToken(), 0, "/", "", true, true)
 	c.SetCookie(RefreshToken, user.GetRefreshToken(), 0, "/", "", true, true)
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{
+		"roles": user.GetRoles(),
+	})
 }

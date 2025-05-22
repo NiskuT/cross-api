@@ -495,7 +495,7 @@ paths:
       tags:
       - competition
   /login:
-    post:
+    put:
       consumes:
       - application/json
       description: Authenticates a user with email and password and returns a JWT

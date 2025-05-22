@@ -4,6 +4,7 @@ package aggregate
 type JwtToken struct {
 	accessToken  string
 	refreshToken string
+	roles        []string
 }
 
 // NewJwtToken creates a new JwtToken
@@ -21,6 +22,11 @@ func (j *JwtToken) SetRefreshToken(refreshToken string) {
 	j.refreshToken = refreshToken
 }
 
+// SetRoles sets the roles
+func (j *JwtToken) SetRoles(roles []string) {
+	j.roles = roles
+}
+
 // GetAccessToken returns the access token
 func (j *JwtToken) GetAccessToken() string {
 	return j.accessToken
@@ -29,4 +35,9 @@ func (j *JwtToken) GetAccessToken() string {
 // GetRefreshToken returns the refresh token
 func (j *JwtToken) GetRefreshToken() string {
 	return j.refreshToken
+}
+
+// GetRoles returns the roles
+func (j *JwtToken) GetRoles() []string {
+	return j.roles
 }
