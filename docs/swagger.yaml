@@ -536,6 +536,21 @@ paths:
       summary: Log in a user
       tags:
       - auth
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: Clears authentication cookies to log out the user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully logged out
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Log out a user
+      tags:
+      - auth
   /run:
     post:
       consumes:

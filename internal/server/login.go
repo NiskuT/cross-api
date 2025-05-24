@@ -57,3 +57,23 @@ func (s *Server) login(c *gin.Context) {
 		Roles: user.GetRoles(),
 	})
 }
+
+// logout godoc
+// @Summary      Log out a user
+// @Description  Clears authentication cookies to log out the user
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Success      200           {object}  gin.H                         "Successfully logged out"
+// @Router       /logout [post]
+func (s *Server) logout(c *gin.Context) {
+	// Clear the access token cookie
+	c.SetCookie(AccessToken, "", -1, "/", "", true, true)
+
+	// Clear the refresh token cookie
+	c.SetCookie(RefreshToken, "", -1, "/", "", true, true)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Successfully logged out",
+	})
+}

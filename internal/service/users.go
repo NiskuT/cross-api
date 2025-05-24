@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/smtp"
 	"strings"
@@ -65,11 +66,13 @@ func (s *UserService) Login(ctx context.Context, email, password string) (*aggre
 	// Get user by email
 	user, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
+		log.Println("Error getting user by email:", err)
 		return nil, ErrInvalidCredentials
 	}
 
 	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.GetPasswordHash()), []byte(password)); err != nil {
+		log.Println("Error comparing password:", err)
 		return nil, ErrInvalidCredentials
 	}
 

@@ -93,6 +93,7 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	router.PUT("/login", s.login)
+	router.POST("/logout", s.logout)
 
 	router.Use(middlewares.Authentication(cfg.Jwt.SecretKey, s.userService))
 
