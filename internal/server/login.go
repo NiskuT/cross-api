@@ -27,7 +27,7 @@ const (
 // @Accept       json
 // @Produce      json
 // @Param        loginRequest  body      models.LoginUser              true  "Login credentials"
-// @Success      200           {object}  gin.H       				 						"Returns user information and tokens in cookies"
+// @Success      200           {object}  models.RoleResponse           "Returns user information and tokens in cookies"
 // @Failure      400           {object}  models.ErrorResponse          "Bad Request"
 // @Failure      401           {object}  models.ErrorResponse          "Unauthorized (invalid credentials)"
 // @Failure      500           {object}  models.ErrorResponse          "Internal Server Error"
@@ -53,7 +53,7 @@ func (s *Server) login(c *gin.Context) {
 	c.SetCookie(AccessToken, user.GetAccessToken(), 0, "/", "", true, true)
 	c.SetCookie(RefreshToken, user.GetRefreshToken(), 0, "/", "", true, true)
 
-	c.JSON(http.StatusOK, gin.H{
-		"roles": user.GetRoles(),
+	c.JSON(http.StatusOK, models.RoleResponse{
+		Roles: user.GetRoles(),
 	})
 }

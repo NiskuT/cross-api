@@ -121,6 +121,13 @@ definitions:
     - first_name
     - last_name
     type: object
+  models.RoleResponse:
+    properties:
+      roles:
+        items:
+          type: string
+        type: array
+    type: object
   models.RunInput:
     properties:
       chrono_sec:
@@ -513,7 +520,7 @@ paths:
         "200":
           description: Returns user information and tokens in cookies
           schema:
-            $ref: '#/definitions/gin.H'
+            $ref: '#/definitions/models.RoleResponse'
         "400":
           description: Bad Request
           schema:

@@ -481,7 +481,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Returns user information and tokens in cookies",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/models.RoleResponse"
                         }
                     },
                     "400": {
@@ -748,6 +748,17 @@ const docTemplate = `{
                 },
                 "last_name": {
                     "type": "string"
+                }
+            }
+        },
+        "models.RoleResponse": {
+            "type": "object",
+            "properties": {
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
