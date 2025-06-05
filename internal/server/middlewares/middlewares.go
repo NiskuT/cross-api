@@ -68,7 +68,7 @@ func extractUserFromClaims(claims jwt.MapClaims) (entity.UserToken, error) {
 	}
 
 	// Extract user ID and email
-	if sub, ok := claims["sub"].(string); ok {
+	if sub, ok := claims["sub"].(int32); ok {
 		customClaims.Id = sub
 	}
 	if email, ok := claims["email"].(string); ok {

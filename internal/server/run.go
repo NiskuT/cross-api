@@ -121,13 +121,7 @@ func (s *Server) createRun(c *gin.Context) {
 	run.SetPenality(runInput.Penality)
 	run.SetChronoSec(runInput.ChronoSec)
 
-	// Parse referee ID from user token ID (sub claim)
-	refereeID, err := strconv.ParseInt(user.Id, 10, 32)
-	if err != nil {
-		RespondError(c, http.StatusInternalServerError, errors.New("invalid referee ID"))
-		return
-	}
-	run.SetRefereeId(int32(refereeID))
+	run.SetRefereeId(user.Id)
 
 	// Call service to create run
 	err = s.runService.CreateRun(c, run)
