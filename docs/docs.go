@@ -875,6 +875,24 @@ const docTemplate = `{
                 "category": {
                     "type": "string"
                 },
+                "points_door1": {
+                    "type": "integer"
+                },
+                "points_door2": {
+                    "type": "integer"
+                },
+                "points_door3": {
+                    "type": "integer"
+                },
+                "points_door4": {
+                    "type": "integer"
+                },
+                "points_door5": {
+                    "type": "integer"
+                },
+                "points_door6": {
+                    "type": "integer"
+                },
                 "zone": {
                     "type": "string"
                 }

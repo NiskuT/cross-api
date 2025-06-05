@@ -45,8 +45,14 @@ type RefereeInput struct {
 
 // ZoneResponse represents a single zone in a competition
 type ZoneResponse struct {
-	Zone     string `json:"zone"`
-	Category string `json:"category"`
+	Zone        string `json:"zone"`
+	Category    string `json:"category"`
+	PointsDoor1 int32  `json:"points_door1"`
+	PointsDoor2 int32  `json:"points_door2"`
+	PointsDoor3 int32  `json:"points_door3"`
+	PointsDoor4 int32  `json:"points_door4"`
+	PointsDoor5 int32  `json:"points_door5"`
+	PointsDoor6 int32  `json:"points_door6"`
 }
 
 // ZonesListResponse represents a list of zones in a competition

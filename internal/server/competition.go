@@ -303,10 +303,9 @@ func (s *Server) listZones(c *gin.Context) {
 	}
 
 	// Check if user has access to the competition
-	hasRole := middlewares.HasRole(c, fmt.Sprintf("admin:%d", competitionID)) ||
-		middlewares.HasRole(c, fmt.Sprintf("referee:%d", competitionID))
-	if !hasRole {
-		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+	err = checkHasAccessToCompetition(c, int32(competitionID))
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
 		return
 	}
 
@@ -328,9 +327,20 @@ func (s *Server) listZones(c *gin.Context) {
 	}
 
 	for _, zone := range zones {
+		scale, err := s.competitionService.GetScale(c, int32(competitionID), zone.GetCategory(), zone.GetZone())
+		if err != nil {
+			RespondError(c, http.StatusInternalServerError, err)
+			return
+		}
 		response.Zones = append(response.Zones, models.ZoneResponse{
-			Zone:     zone.GetZone(),
-			Category: zone.GetCategory(),
+			Zone:        zone.GetZone(),
+			Category:    zone.GetCategory(),
+			PointsDoor1: scale.GetPointsDoor1(),
+			PointsDoor2: scale.GetPointsDoor2(),
+			PointsDoor3: scale.GetPointsDoor3(),
+			PointsDoor4: scale.GetPointsDoor4(),
+			PointsDoor5: scale.GetPointsDoor5(),
+			PointsDoor6: scale.GetPointsDoor6(),
 		})
 	}
 
