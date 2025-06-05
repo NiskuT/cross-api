@@ -101,6 +101,7 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 	router.GET("/competition", s.listCompetitions)
 	router.POST("/competition/zone", s.addZoneToCompetition)
 	router.PUT("/competition/zone", s.updateZoneInCompetition)
+	router.DELETE("/competition/zone", s.deleteZoneFromCompetition)
 	router.POST("/competition/participants", s.addParticipantsToCompetition)
 	router.POST("/competition/referee", s.addRefereeToCompetition)
 	router.GET("/competition/:competitionID/participant/:dossard", s.getParticipant)

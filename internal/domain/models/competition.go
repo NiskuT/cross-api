@@ -35,6 +35,13 @@ type CompetitionScaleInput struct {
 	PointsDoor6   int32  `json:"points_door6" binding:"required"`
 }
 
+// CompetitionZoneDeleteInput represents the input for deleting a zone from a competition
+type CompetitionZoneDeleteInput struct {
+	CompetitionID int32  `json:"competition_id" binding:"required"`
+	Category      string `json:"category" binding:"required"`
+	Zone          string `json:"zone" binding:"required"`
+}
+
 // RefereeInput represents the input for adding a referee to a competition
 type RefereeInput struct {
 	CompetitionID int32  `json:"competition_id" binding:"required"`

@@ -402,3 +402,58 @@ func (s *Server) updateZoneInCompetition(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Zone updated successfully"})
 }
+
+// deleteZoneFromCompetition godoc
+// @Summary      Delete a zone from a competition
+// @Description  Deletes an existing zone from a competition
+// @Tags         competition
+// @Accept       json
+// @Produce      json
+// @Param        Cookie  header string    true  "Authentication cookie"
+// @Param        zone  body       models.CompetitionZoneDeleteInput  true  "Zone deletion data"
+// @Success      200           {object}  gin.H       			 						 "Returns success message"
+// @Failure      400           {object}  models.ErrorResponse          "Bad Request"
+// @Failure      401           {object}  models.ErrorResponse          "Unauthorized (invalid credentials)"
+// @Failure      404           {object}  models.ErrorResponse          "Zone not found"
+// @Failure      500           {object}  models.ErrorResponse          "Internal Server Error"
+// @Router       /competition/zone [delete]
+func (s *Server) deleteZoneFromCompetition(c *gin.Context) {
+	var zoneDeleteInput models.CompetitionZoneDeleteInput
+	if err := c.ShouldBindJSON(&zoneDeleteInput); err != nil {
+		RespondError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	if zoneDeleteInput.CompetitionID == 0 {
+		RespondError(c, http.StatusBadRequest, errors.New("competition ID is required"))
+		return
+	}
+
+	if zoneDeleteInput.Category == "" {
+		RespondError(c, http.StatusBadRequest, errors.New("category is required"))
+		return
+	}
+
+	if zoneDeleteInput.Zone == "" {
+		RespondError(c, http.StatusBadRequest, errors.New("zone is required"))
+		return
+	}
+
+	role := fmt.Sprintf("admin:%d", zoneDeleteInput.CompetitionID)
+	if !middlewares.HasRole(c, role) {
+		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+		return
+	}
+
+	err := s.competitionService.DeleteScale(c, zoneDeleteInput.CompetitionID, zoneDeleteInput.Category, zoneDeleteInput.Zone)
+	if err != nil {
+		if errors.Is(err, repository.ErrScaleNotFound) {
+			RespondError(c, http.StatusNotFound, errors.New("zone not found"))
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Zone deleted successfully"})
+}

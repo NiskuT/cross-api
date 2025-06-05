@@ -375,6 +375,69 @@
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "Deletes an existing zone from a competition",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "competition"
+                ],
+                "summary": "Delete a zone from a competition",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Zone deletion data",
+                        "name": "zone",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CompetitionZoneDeleteInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns success message",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (invalid credentials)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Zone not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/competition/{competitionID}/participant/{dossard}": {
@@ -755,6 +818,25 @@
                     "type": "integer"
                 },
                 "points_door6": {
+                    "type": "integer"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CompetitionZoneDeleteInput": {
+            "type": "object",
+            "required": [
+                "category",
+                "competition_id",
+                "zone"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "competition_id": {
                     "type": "integer"
                 },
                 "zone": {

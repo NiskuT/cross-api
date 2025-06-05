@@ -75,6 +75,19 @@ definitions:
     - points_door6
     - zone
     type: object
+  models.CompetitionZoneDeleteInput:
+    properties:
+      category:
+        type: string
+      competition_id:
+        type: integer
+      zone:
+        type: string
+    required:
+    - category
+    - competition_id
+    - zone
+    type: object
   models.ErrorResponse:
     properties:
       code:
@@ -475,6 +488,48 @@ paths:
       tags:
       - competition
   /competition/zone:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an existing zone from a competition
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Zone deletion data
+        in: body
+        name: zone
+        required: true
+        schema:
+          $ref: '#/definitions/models.CompetitionZoneDeleteInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns success message
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Zone not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Delete a zone from a competition
+      tags:
+      - competition
     post:
       consumes:
       - application/json

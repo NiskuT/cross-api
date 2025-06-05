@@ -16,4 +16,5 @@ type CompetitionService interface {
 	ListZones(ctx context.Context, competitionID int32) ([]aggregate.ZoneInfo, error)
 	GetScale(ctx context.Context, competitionID int32, category string, zone string) (*aggregate.Scale, error)
 	UpdateScale(ctx context.Context, competitionID int32, scale *aggregate.Scale) error
+	DeleteScale(ctx context.Context, competitionID int32, category string, zone string) error
 }

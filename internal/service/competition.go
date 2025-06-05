@@ -225,3 +225,13 @@ func (s *CompetitionService) UpdateScale(ctx context.Context, competitionID int3
 
 	return s.scaleRepo.UpdateScale(ctx, scale)
 }
+
+func (s *CompetitionService) DeleteScale(ctx context.Context, competitionID int32, category string, zone string) error {
+	// check if the scale exists
+	_, err := s.scaleRepo.GetScale(ctx, competitionID, category, zone)
+	if err != nil {
+		return err
+	}
+
+	return s.scaleRepo.DeleteScale(ctx, competitionID, category, zone)
+}
