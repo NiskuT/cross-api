@@ -235,3 +235,19 @@ func (s *CompetitionService) DeleteScale(ctx context.Context, competitionID int3
 
 	return s.scaleRepo.DeleteScale(ctx, competitionID, category, zone)
 }
+
+func (s *CompetitionService) GetLiveranking(ctx context.Context, competitionID int32, category string, pageNumber, pageSize int32) ([]*aggregate.Liveranking, int32, error) {
+	// check if competition exists
+	_, err := s.competitionRepo.GetCompetition(ctx, competitionID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// If category is empty, get all rankings
+	if category == "" {
+		return s.liverankingRepo.ListLiveranking(ctx, competitionID, pageNumber, pageSize)
+	}
+
+	// Get rankings for specific category
+	return s.liverankingRepo.ListLiverankingByCategory(ctx, competitionID, category, pageNumber, pageSize)
+}

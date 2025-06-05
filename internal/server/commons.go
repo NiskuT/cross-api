@@ -15,17 +15,18 @@ var (
 )
 
 func getPagination(c *gin.Context) (int32, int32) {
-	page, err := strconv.Atoi(c.DefaultQuery("page", "0"))
-	if err != nil {
-		page = 0
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
 	}
 
-	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10")) // Default limit to 10
-	if err != nil {
-		limit = 10
+	// Support both 'page_size' and 'limit' for backward compatibility
+	pageSize, err := strconv.Atoi(c.DefaultQuery("page_size", c.DefaultQuery("limit", "10")))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
 	}
 
-	return int32(page), int32(limit)
+	return int32(page), int32(pageSize)
 }
 
 func checkHasAccessToCompetition(c *gin.Context, competitionID int32) error {

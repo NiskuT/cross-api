@@ -95,6 +95,44 @@ definitions:
       message:
         type: string
     type: object
+  models.LiverankingListResponse:
+    properties:
+      category:
+        type: string
+      competition_id:
+        type: integer
+      page:
+        type: integer
+      page_size:
+        type: integer
+      rankings:
+        items:
+          $ref: '#/definitions/models.LiverankingResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  models.LiverankingResponse:
+    properties:
+      category:
+        type: string
+      chrono_sec:
+        type: integer
+      dossard:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+      number_of_runs:
+        type: integer
+      penality:
+        type: integer
+      rank:
+        type: integer
+      total_points:
+        type: integer
+    type: object
   models.LoginUser:
     properties:
       email:
@@ -308,6 +346,61 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Create a competition
+      tags:
+      - competition
+  /competition/{competitionID}/liveranking:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the live ranking for a competition with optional category
+        filtering and pagination
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Competition ID
+        in: path
+        name: competitionID
+        required: true
+        type: integer
+      - description: Category filter (optional)
+        in: query
+        name: category
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 10)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns live ranking data
+          schema:
+            $ref: '#/definitions/models.LiverankingListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Competition not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get live ranking for a competition
       tags:
       - competition
   /competition/{competitionID}/participant/{dossard}:

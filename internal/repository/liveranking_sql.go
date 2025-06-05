@@ -181,3 +181,86 @@ func (r *SQLLiverankingRepository) ListLiveranking(ctx context.Context, competit
 
 	return liverankings, totalCount, nil
 }
+
+// ListLiverankingByCategory lists liveranking entries for a specific category, sorted by desc total points, asc penality, and desc chrono sec
+func (r *SQLLiverankingRepository) ListLiverankingByCategory(ctx context.Context, competitionID int32, category string, pageNumber, pageSize int32) ([]*aggregate.Liveranking, int32, error) {
+	if pageSize <= 0 {
+		pageSize = 10 // Default page size
+	}
+
+	if pageNumber <= 0 {
+		pageNumber = 1 // Default page number
+	}
+
+	// Get total count first for the specific category
+	countQuery := `
+		SELECT COUNT(*)
+		FROM liverankings l
+		JOIN participants p ON l.competition_id = p.competition_id AND l.dossard_number = p.dossard_number
+		WHERE l.competition_id = ? AND p.category = ?
+	`
+	var totalCount int32
+	err := r.db.QueryRowContext(ctx, countQuery, competitionID, category).Scan(&totalCount)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	offset := (pageNumber - 1) * pageSize
+
+	query := `
+		SELECT l.competition_id, l.dossard_number, p.first_name, p.last_name, p.category, 
+		       l.number_of_runs, l.total_points, l.penality, l.chrono_sec
+		FROM liverankings l
+		JOIN participants p ON l.competition_id = p.competition_id AND l.dossard_number = p.dossard_number
+		WHERE l.competition_id = ? AND p.category = ?
+		ORDER BY l.total_points DESC, l.penality ASC, l.chrono_sec DESC
+		LIMIT ? OFFSET ?
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, competitionID, category, pageSize, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var liverankings []*aggregate.Liveranking
+	for rows.Next() {
+		liveranking := aggregate.NewLiveranking()
+
+		var competitionID, dossardNumber, numberOfRuns, totalPoints, penality, chronoSec int32
+		var firstName, lastName, category string
+
+		err := rows.Scan(
+			&competitionID,
+			&dossardNumber,
+			&firstName,
+			&lastName,
+			&category,
+			&numberOfRuns,
+			&totalPoints,
+			&penality,
+			&chronoSec,
+		)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		liveranking.SetCompetitionID(competitionID)
+		liveranking.SetDossard(dossardNumber)
+		liveranking.SetFirstName(firstName)
+		liveranking.SetLastName(lastName)
+		liveranking.SetCategory(category)
+		liveranking.SetNumberOfRuns(numberOfRuns)
+		liveranking.SetTotalPoints(totalPoints)
+		liveranking.SetPenality(penality)
+		liveranking.SetChronoSec(chronoSec)
+
+		liverankings = append(liverankings, liveranking)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return liverankings, totalCount, nil
+}

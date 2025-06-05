@@ -457,3 +457,81 @@ func (s *Server) deleteZoneFromCompetition(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Zone deleted successfully"})
 }
+
+// getLiveranking godoc
+// @Summary      Get live ranking for a competition
+// @Description  Retrieves the live ranking for a competition with optional category filtering and pagination
+// @Tags         competition
+// @Accept       json
+// @Produce      json
+// @Param        Cookie  header string    true  "Authentication cookie"
+// @Param        competitionID  path      int     true  "Competition ID"
+// @Param        category       query     string  false "Category filter (optional)"
+// @Param        page           query     int     false "Page number (default: 1)"
+// @Param        page_size      query     int     false "Page size (default: 10)"
+// @Success      200           {object}  models.LiverankingListResponse     "Returns live ranking data"
+// @Failure      400           {object}  models.ErrorResponse               "Bad Request"
+// @Failure      401           {object}  models.ErrorResponse               "Unauthorized (invalid credentials)"
+// @Failure      404           {object}  models.ErrorResponse               "Competition not found"
+// @Failure      500           {object}  models.ErrorResponse               "Internal Server Error"
+// @Router       /competition/{competitionID}/liveranking [get]
+func (s *Server) getLiveranking(c *gin.Context) {
+	competitionIDStr := c.Param("competitionID")
+
+	competitionID, err := strconv.ParseInt(competitionIDStr, 10, 32)
+	if err != nil {
+		RespondError(c, http.StatusBadRequest, errors.New("invalid competition ID"))
+		return
+	}
+
+	// Check if user has access to the competition
+	err = checkHasAccessToCompetition(c, int32(competitionID))
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
+		return
+	}
+
+	// Get query parameters
+	category := c.Query("category")
+	page, pageSize := getPagination(c)
+
+	// Get live ranking from service
+	rankings, total, err := s.competitionService.GetLiveranking(c, int32(competitionID), category, page, pageSize)
+	if err != nil {
+		if errors.Is(err, repository.ErrCompetitionNotFound) {
+			RespondError(c, http.StatusNotFound, errors.New("competition not found"))
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Build response
+	response := models.LiverankingListResponse{
+		CompetitionID: int32(competitionID),
+		Category:      category,
+		Page:          page,
+		PageSize:      pageSize,
+		Total:         total,
+		Rankings:      make([]models.LiverankingResponse, 0, len(rankings)),
+	}
+
+	// Calculate rank based on position (considering pagination)
+	baseRank := (page-1)*pageSize + 1
+
+	for i, ranking := range rankings {
+		response.Rankings = append(response.Rankings, models.LiverankingResponse{
+			Rank:         baseRank + int32(i),
+			Dossard:      ranking.GetDossard(),
+			FirstName:    ranking.GetFirstName(),
+			LastName:     ranking.GetLastName(),
+			Category:     ranking.GetCategory(),
+			NumberOfRuns: ranking.GetNumberOfRuns(),
+			TotalPoints:  ranking.GetTotalPoints(),
+			Penality:     ranking.GetPenality(),
+			ChronoSec:    ranking.GetChronoSec(),
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
+}
