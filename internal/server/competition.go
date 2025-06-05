@@ -158,7 +158,7 @@ func (s *Server) addZoneToCompetition(c *gin.Context) {
 	scale.SetPointsDoor5(competitionScaleInput.PointsDoor5)
 	scale.SetPointsDoor6(competitionScaleInput.PointsDoor6)
 
-	err := s.competitionService.AddZone(c, competitionScaleInput.CompetitionID, scale)
+	err := s.competitionService.AddScale(c, competitionScaleInput.CompetitionID, scale)
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, err)
 		return

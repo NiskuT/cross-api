@@ -86,16 +86,6 @@ func (s *CompetitionService) CreateCompetition(ctx context.Context, competition 
 	return id, nil
 }
 
-func (s *CompetitionService) AddZone(ctx context.Context, competitionID int32, zone *aggregate.Scale) error {
-	// check if competition exists
-	_, err := s.competitionRepo.GetCompetition(ctx, competitionID)
-	if err != nil {
-		return err
-	}
-
-	return s.scaleRepo.CreateScale(ctx, zone)
-}
-
 // Helper function to check if error is because participant already exists
 func isParticipantAlreadyExistsError(err error) bool {
 	return err != nil && strings.Contains(strings.ToLower(err.Error()), "duplicate")
@@ -204,4 +194,34 @@ func (s *CompetitionService) ListZones(ctx context.Context, competitionID int32)
 
 	// Get zones from repository
 	return s.scaleRepo.ListZones(ctx, competitionID)
+}
+
+func (s *CompetitionService) GetScale(ctx context.Context, competitionID int32, category string, zone string) (*aggregate.Scale, error) {
+	// Verify the competition exists
+	_, err := s.competitionRepo.GetCompetition(ctx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.scaleRepo.GetScale(ctx, competitionID, category, zone)
+}
+
+func (s *CompetitionService) AddScale(ctx context.Context, competitionID int32, scale *aggregate.Scale) error {
+	// check if competition exists
+	_, err := s.competitionRepo.GetCompetition(ctx, competitionID)
+	if err != nil {
+		return err
+	}
+
+	return s.scaleRepo.CreateScale(ctx, scale)
+}
+
+func (s *CompetitionService) UpdateScale(ctx context.Context, competitionID int32, scale *aggregate.Scale) error {
+	// check if scale exists
+	scale, err := s.scaleRepo.GetScale(ctx, competitionID, scale.GetCategory(), scale.GetZone())
+	if err != nil {
+		return err
+	}
+
+	return s.scaleRepo.UpdateScale(ctx, scale)
 }
