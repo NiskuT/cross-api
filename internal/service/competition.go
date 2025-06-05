@@ -215,6 +215,18 @@ func (s *CompetitionService) ListCompetitions(ctx context.Context) ([]*aggregate
 	return competitions, nil
 }
 
+// CreateParticipant creates a single participant for a competition
+func (s *CompetitionService) CreateParticipant(ctx context.Context, participant *aggregate.Participant) error {
+	// Check if competition exists
+	_, err := s.competitionRepo.GetCompetition(ctx, participant.GetCompetitionID())
+	if err != nil {
+		return err
+	}
+
+	// Create participant
+	return s.participantRepo.CreateParticipant(ctx, participant)
+}
+
 // GetParticipant retrieves a participant by competition ID and dossard number
 func (s *CompetitionService) GetParticipant(ctx context.Context, competitionID int32, dossardNumber int32) (*aggregate.Participant, error) {
 	// Get participant from repository
@@ -224,6 +236,18 @@ func (s *CompetitionService) GetParticipant(ctx context.Context, competitionID i
 	}
 
 	return participant, nil
+}
+
+// ListParticipantsByCategory retrieves all participants for a competition by category
+func (s *CompetitionService) ListParticipantsByCategory(ctx context.Context, competitionID int32, category string) ([]*aggregate.Participant, error) {
+	// Verify the competition exists
+	_, err := s.competitionRepo.GetCompetition(ctx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get participants from repository
+	return s.participantRepo.ListParticipantsByCategory(ctx, competitionID, category)
 }
 
 // ListZones lists all zones for a competition

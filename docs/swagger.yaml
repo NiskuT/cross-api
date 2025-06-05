@@ -143,6 +143,32 @@ definitions:
     - email
     - password
     type: object
+  models.ParticipantInput:
+    properties:
+      category:
+        type: string
+      competition_id:
+        type: integer
+      dossard_number:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+    required:
+    - category
+    - competition_id
+    - dossard_number
+    - first_name
+    - last_name
+    type: object
+  models.ParticipantListResponse:
+    properties:
+      participants:
+        items:
+          $ref: '#/definitions/models.ParticipantResponse'
+        type: array
+    type: object
   models.ParticipantResponse:
     properties:
       category:
@@ -451,6 +477,53 @@ paths:
       summary: Get participant information
       tags:
       - participant
+  /competition/{competitionID}/participants:
+    get:
+      consumes:
+      - application/json
+      description: Lists all participants for a competition filtered by category
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Competition ID
+        in: path
+        name: competitionID
+        required: true
+        type: integer
+      - description: Category filter
+        in: query
+        name: category
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns list of participants
+          schema:
+            $ref: '#/definitions/models.ParticipantListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Competition not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: List participants by category
+      tags:
+      - participant
   /competition/{competitionID}/zones:
     get:
       consumes:
@@ -497,7 +570,8 @@ paths:
     post:
       consumes:
       - multipart/form-data
-      description: Adds multiple participants to a competition from an Excel file
+      description: Adds multiple participants to a competition from a CSV or Excel
+        file
       parameters:
       - description: Authentication cookie
         in: header
@@ -514,7 +588,8 @@ paths:
         name: category
         required: true
         type: string
-      - description: Excel file with participants data
+      - description: 'CSV or Excel file with participants data (format: last name,
+          first name, dossard number)'
         in: formData
         name: file
         required: true
@@ -753,6 +828,49 @@ paths:
       summary: Log out a user
       tags:
       - auth
+  /participant:
+    post:
+      consumes:
+      - application/json
+      description: Creates a single participant for a competition
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Participant data
+        in: body
+        name: participant
+        required: true
+        schema:
+          $ref: '#/definitions/models.ParticipantInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Returns created participant data
+          schema:
+            $ref: '#/definitions/models.ParticipantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "409":
+          description: Participant already exists
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Create a participant
+      tags:
+      - participant
   /run:
     post:
       consumes:

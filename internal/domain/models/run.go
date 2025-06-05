@@ -1,5 +1,14 @@
 package models
 
+// ParticipantInput represents the input for creating a participant
+type ParticipantInput struct {
+	CompetitionID int32  `json:"competition_id" binding:"required"`
+	DossardNumber int32  `json:"dossard_number" binding:"required"`
+	FirstName     string `json:"first_name" binding:"required"`
+	LastName      string `json:"last_name" binding:"required"`
+	Category      string `json:"category" binding:"required"`
+}
+
 // ParticipantResponse represents the response for a participant
 type ParticipantResponse struct {
 	CompetitionID int32  `json:"competition_id"`
@@ -7,6 +16,11 @@ type ParticipantResponse struct {
 	FirstName     string `json:"first_name"`
 	LastName      string `json:"last_name"`
 	Category      string `json:"category"`
+}
+
+// ParticipantListResponse represents the response for a list of participants
+type ParticipantListResponse struct {
+	Participants []*ParticipantResponse `json:"participants"`
 }
 
 // RunInput represents the input for creating a new run

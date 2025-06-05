@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/NiskuT/cross-api/internal/domain/aggregate"
 	"github.com/NiskuT/cross-api/internal/domain/models"
@@ -534,6 +535,139 @@ func (s *Server) getLiveranking(c *gin.Context) {
 			Penality:     ranking.GetPenality(),
 			ChronoSec:    ranking.GetChronoSec(),
 		})
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// createParticipant godoc
+// @Summary      Create a participant
+// @Description  Creates a single participant for a competition
+// @Tags         participant
+// @Accept       json
+// @Produce      json
+// @Param        Cookie  header string    true  "Authentication cookie"
+// @Param        participant  body       models.ParticipantInput  true  "Participant data"
+// @Success      201           {object}  models.ParticipantResponse     "Returns created participant data"
+// @Failure      400           {object}  models.ErrorResponse           "Bad Request"
+// @Failure      401           {object}  models.ErrorResponse           "Unauthorized (invalid credentials)"
+// @Failure      409           {object}  models.ErrorResponse           "Participant already exists"
+// @Failure      500           {object}  models.ErrorResponse           "Internal Server Error"
+// @Router       /participant [post]
+func (s *Server) createParticipant(c *gin.Context) {
+	var participantInput models.ParticipantInput
+	if err := c.ShouldBindJSON(&participantInput); err != nil {
+		RespondError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	// Check if user has access to the competition
+	role := fmt.Sprintf("admin:%d", participantInput.CompetitionID)
+	if !middlewares.HasRole(c, role) {
+		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+		return
+	}
+
+	// Create participant aggregate
+	participant := aggregate.NewParticipant()
+	participant.SetCompetitionID(participantInput.CompetitionID)
+	participant.SetDossardNumber(participantInput.DossardNumber)
+	participant.SetFirstName(participantInput.FirstName)
+	participant.SetLastName(participantInput.LastName)
+	participant.SetCategory(participantInput.Category)
+
+	// Create participant through service
+	err := s.competitionService.CreateParticipant(c, participant)
+	if err != nil {
+		// Check for duplicate participant error (need to check the error message since it's in different package)
+		if errors.Is(err, repository.ErrCompetitionNotFound) {
+			RespondError(c, http.StatusNotFound, errors.New("competition not found"))
+			return
+		}
+		// Check if it's a duplicate error from the participant repository
+		if strings.Contains(err.Error(), "already exists") || strings.Contains(err.Error(), "duplicate") {
+			RespondError(c, http.StatusConflict, errors.New("participant with this dossard number already exists"))
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Build response
+	response := models.ParticipantResponse{
+		CompetitionID: participant.GetCompetitionID(),
+		DossardNumber: participant.GetDossardNumber(),
+		FirstName:     participant.GetFirstName(),
+		LastName:      participant.GetLastName(),
+		Category:      participant.GetCategory(),
+	}
+
+	c.JSON(http.StatusCreated, response)
+}
+
+// listParticipantsByCategory godoc
+// @Summary      List participants by category
+// @Description  Lists all participants for a competition filtered by category
+// @Tags         participant
+// @Accept       json
+// @Produce      json
+// @Param        Cookie  header string    true  "Authentication cookie"
+// @Param        competitionID  path      int     true  "Competition ID"
+// @Param        category       query     string  true  "Category filter"
+// @Success      200           {object}  models.ParticipantListResponse "Returns list of participants"
+// @Failure      400           {object}  models.ErrorResponse           "Bad Request"
+// @Failure      401           {object}  models.ErrorResponse           "Unauthorized (invalid credentials)"
+// @Failure      404           {object}  models.ErrorResponse           "Competition not found"
+// @Failure      500           {object}  models.ErrorResponse           "Internal Server Error"
+// @Router       /competition/{competitionID}/participants [get]
+func (s *Server) listParticipantsByCategory(c *gin.Context) {
+	competitionIDStr := c.Param("competitionID")
+	category := c.Query("category")
+
+	// Validate inputs
+	competitionID, err := strconv.ParseInt(competitionIDStr, 10, 32)
+	if err != nil {
+		RespondError(c, http.StatusBadRequest, errors.New("invalid competition ID"))
+		return
+	}
+
+	if category == "" {
+		RespondError(c, http.StatusBadRequest, errors.New("category parameter is required"))
+		return
+	}
+
+	// Check if user has access to the competition
+	hasRole := middlewares.HasRole(c, fmt.Sprintf("admin:%d", competitionID)) ||
+		middlewares.HasRole(c, fmt.Sprintf("referee:%d", competitionID))
+	if !hasRole {
+		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+		return
+	}
+
+	// Get participants through service
+	participants, err := s.competitionService.ListParticipantsByCategory(c, int32(competitionID), category)
+	if err != nil {
+		if errors.Is(err, repository.ErrCompetitionNotFound) {
+			RespondError(c, http.StatusNotFound, errors.New("competition not found"))
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Build response
+	response := models.ParticipantListResponse{
+		Participants: make([]*models.ParticipantResponse, len(participants)),
+	}
+
+	for i, participant := range participants {
+		response.Participants[i] = &models.ParticipantResponse{
+			CompetitionID: participant.GetCompetitionID(),
+			DossardNumber: participant.GetDossardNumber(),
+			FirstName:     participant.GetFirstName(),
+			LastName:      participant.GetLastName(),
+			Category:      participant.GetCategory(),
+		}
 	}
 
 	c.JSON(http.StatusOK, response)

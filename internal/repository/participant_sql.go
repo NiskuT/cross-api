@@ -160,6 +160,53 @@ func (r *SQLParticipantRepository) DeleteParticipant(ctx context.Context, compet
 	return nil
 }
 
+// ListParticipantsByCategory retrieves all participants for a competition by category
+func (r *SQLParticipantRepository) ListParticipantsByCategory(ctx context.Context, competitionID int32, category string) ([]*aggregate.Participant, error) {
+	query := `
+		SELECT competition_id, dossard_number, first_name, last_name, category
+		FROM participants
+		WHERE competition_id = ? AND category = ?
+		ORDER BY dossard_number
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, competitionID, category)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var participants []*aggregate.Participant
+	for rows.Next() {
+		var participant Participant
+		err := rows.Scan(
+			&participant.CompetitionID,
+			&participant.DossardNumber,
+			&participant.FirstName,
+			&participant.LastName,
+			&participant.Category,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		participantAggregate := aggregate.NewParticipant()
+		participantAggregate.SetCompetitionID(participant.CompetitionID)
+		participantAggregate.SetDossardNumber(participant.DossardNumber)
+		participantAggregate.SetFirstName(participant.FirstName)
+		participantAggregate.SetLastName(participant.LastName)
+		participantAggregate.SetCategory(participant.Category)
+
+		participants = append(participants, participantAggregate)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return participants, nil
+}
+
 // Helper function to check if an error is a duplicate key error
 func isDuplicateKeyError(err error) bool {
 	// For MySQL

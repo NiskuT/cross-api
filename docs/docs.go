@@ -133,7 +133,7 @@ const docTemplate = `{
         },
         "/competition/participants": {
             "post": {
-                "description": "Adds multiple participants to a competition from an Excel file",
+                "description": "Adds multiple participants to a competition from a CSV or Excel file",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -168,7 +168,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "file",
-                        "description": "Excel file with participants data",
+                        "description": "CSV or Excel file with participants data (format: last name, first name, dossard number)",
                         "name": "file",
                         "in": "formData",
                         "required": true
@@ -597,6 +597,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/competition/{competitionID}/participants": {
+            "get": {
+                "description": "Lists all participants for a competition filtered by category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "participant"
+                ],
+                "summary": "List participants by category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Competition ID",
+                        "name": "competitionID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Category filter",
+                        "name": "category",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns list of participants",
+                        "schema": {
+                            "$ref": "#/definitions/models.ParticipantListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (invalid credentials)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Competition not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/competition/{competitionID}/zones": {
             "get": {
                 "description": "Lists all available zones for a competition",
@@ -730,6 +800,71 @@ const docTemplate = `{
                         "description": "Successfully logged out",
                         "schema": {
                             "$ref": "#/definitions/gin.H"
+                        }
+                    }
+                }
+            }
+        },
+        "/participant": {
+            "post": {
+                "description": "Creates a single participant for a competition",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "participant"
+                ],
+                "summary": "Create a participant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Participant data",
+                        "name": "participant",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ParticipantInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Returns created participant data",
+                        "schema": {
+                            "$ref": "#/definitions/models.ParticipantResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (invalid credentials)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Participant already exists",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
                         }
                     }
                 }
@@ -1012,6 +1147,44 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "models.ParticipantInput": {
+            "type": "object",
+            "required": [
+                "category",
+                "competition_id",
+                "dossard_number",
+                "first_name",
+                "last_name"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "competition_id": {
+                    "type": "integer"
+                },
+                "dossard_number": {
+                    "type": "integer"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ParticipantListResponse": {
+            "type": "object",
+            "properties": {
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ParticipantResponse"
+                    }
                 }
             }
         },
