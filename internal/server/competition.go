@@ -169,14 +169,14 @@ func (s *Server) addZoneToCompetition(c *gin.Context) {
 
 // addParticipantsToCompetition godoc
 // @Summary      Add participants to a competition
-// @Description  Adds multiple participants to a competition from an Excel file
+// @Description  Adds multiple participants to a competition from a CSV or Excel file
 // @Tags         competition
 // @Accept       multipart/form-data
 // @Produce      json
 // @Param        Cookie  header string    true  "Authentication cookie"
 // @Param        competitionID  formData  int     true  "Competition ID"
 // @Param        category       formData  string  true  "Participant category"
-// @Param        file           formData  file    true  "Excel file with participants data"
+// @Param        file           formData  file    true  "CSV or Excel file with participants data (format: last name, first name, dossard number)"
 // @Success      200           {object}  gin.H                        "Successfully added participants"
 // @Failure      400           {object}  models.ErrorResponse         "Bad Request"
 // @Failure      401           {object}  models.ErrorResponse         "Unauthorized (invalid credentials)"
@@ -208,14 +208,17 @@ func (s *Server) addParticipantsToCompetition(c *gin.Context) {
 		return
 	}
 
-	file, _, err := c.Request.FormFile("file")
+	file, fileHeader, err := c.Request.FormFile("file")
 	if err != nil {
-		RespondError(c, http.StatusBadRequest, errors.New("excel file is required"))
+		RespondError(c, http.StatusBadRequest, errors.New("file is required"))
 		return
 	}
 	defer file.Close()
 
-	err = s.competitionService.AddParticipants(c, competitionID, category, file)
+	// Get filename from the file header
+	filename := fileHeader.Filename
+
+	err = s.competitionService.AddParticipants(c, competitionID, category, file, filename)
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, err)
 		return

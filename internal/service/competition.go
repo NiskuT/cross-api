@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"io"
@@ -16,8 +17,8 @@ import (
 
 // Define error constants
 var (
-	ErrInvalidExcelFormat = errors.New("invalid excel format: expected columns for last name, first name, and dossard number")
-	ErrParticipantExists  = errors.New("participant with this dossard number already exists in the competition")
+	ErrInvalidFileFormat = errors.New("invalid file format: expected CSV or Excel file with columns for last name, first name, and dossard number")
+	ErrParticipantExists = errors.New("participant with this dossard number already exists in the competition")
 )
 
 type CompetitionService struct {
@@ -91,32 +92,40 @@ func isParticipantAlreadyExistsError(err error) bool {
 	return err != nil && strings.Contains(strings.ToLower(err.Error()), "duplicate")
 }
 
-// AddParticipants creates multiple participants from an Excel file for a competition
-func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID int32, category string, excelFile io.Reader) error {
+// AddParticipants creates multiple participants from a CSV or Excel file for a competition
+func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID int32, category string, file io.Reader, filename string) error {
 	// Check if competition exists
 	_, err := s.competitionRepo.GetCompetition(ctx, competitionID)
 	if err != nil {
 		return err
 	}
 
-	// Open Excel file
-	xlsx, err := excelize.OpenReader(excelFile)
-	if err != nil {
-		return fmt.Errorf("failed to open excel file: %w", err)
+	// Determine file type based on extension
+	isCSV := strings.HasSuffix(strings.ToLower(filename), ".csv")
+	isExcel := strings.HasSuffix(strings.ToLower(filename), ".xlsx") || strings.HasSuffix(strings.ToLower(filename), ".xls")
+
+	if !isCSV && !isExcel {
+		return fmt.Errorf("unsupported file format: %s. Only CSV and Excel files are supported", filename)
 	}
-	defer xlsx.Close()
 
-	// Get active sheet
-	sheetName := xlsx.GetSheetName(0)
+	var rows [][]string
 
-	// Read rows from Excel
-	rows, err := xlsx.GetRows(sheetName)
-	if err != nil {
-		return fmt.Errorf("failed to read rows from excel: %w", err)
+	if isCSV {
+		// Handle CSV file
+		rows, err = s.readCSVFile(file)
+		if err != nil {
+			return fmt.Errorf("failed to read CSV file: %w", err)
+		}
+	} else {
+		// Handle Excel file
+		rows, err = s.readExcelFile(file)
+		if err != nil {
+			return fmt.Errorf("failed to read Excel file: %w", err)
+		}
 	}
 
 	if len(rows) < 2 { // At least header row and one data row required
-		return ErrInvalidExcelFormat
+		return ErrInvalidFileFormat
 	}
 
 	// Process participants
@@ -126,16 +135,16 @@ func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID 
 			continue
 		}
 
-		// Excel should have at least 3 columns: first name, last name, dossard number
+		// File should have at least 3 columns: last name, first name, dossard number
 		if len(row) < 3 {
-			return ErrInvalidExcelFormat
+			return fmt.Errorf("invalid format on row %d: expected at least 3 columns (last name, first name, dossard number)", i+1)
 		}
 
-		lastName := row[0]
-		firstName := row[1]
+		lastName := strings.TrimSpace(row[0])
+		firstName := strings.TrimSpace(row[1])
 
 		// Parse dossard number
-		dossardStr := row[2]
+		dossardStr := strings.TrimSpace(row[2])
 		dossard, err := strconv.ParseInt(dossardStr, 10, 32)
 		if err != nil {
 			return fmt.Errorf("invalid dossard number on row %d: %w", i+1, err)
@@ -162,6 +171,39 @@ func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID 
 	}
 
 	return nil
+}
+
+// readCSVFile reads data from a CSV file
+func (s *CompetitionService) readCSVFile(file io.Reader) ([][]string, error) {
+	reader := csv.NewReader(file)
+	reader.FieldsPerRecord = -1 // Allow variable number of fields
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
+}
+
+// readExcelFile reads data from an Excel file
+func (s *CompetitionService) readExcelFile(file io.Reader) ([][]string, error) {
+	xlsx, err := excelize.OpenReader(file)
+	if err != nil {
+		return nil, err
+	}
+	defer xlsx.Close()
+
+	// Get active sheet
+	sheetName := xlsx.GetSheetName(0)
+
+	// Read rows from Excel
+	rows, err := xlsx.GetRows(sheetName)
+	if err != nil {
+		return nil, err
+	}
+
+	return rows, nil
 }
 
 func (s *CompetitionService) ListCompetitions(ctx context.Context) ([]*aggregate.Competition, error) {
