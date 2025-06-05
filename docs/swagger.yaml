@@ -513,6 +513,48 @@ paths:
       summary: Add a zone to a competition
       tags:
       - competition
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing zone in a competition
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Competition data
+        in: body
+        name: competition
+        required: true
+        schema:
+          $ref: '#/definitions/models.CompetitionScaleInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns success message
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Zone not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Update a zone in a competition
+      tags:
+      - competition
   /login:
     put:
       consumes:

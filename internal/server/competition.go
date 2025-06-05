@@ -346,3 +346,59 @@ func (s *Server) listZones(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+// updateZoneInCompetition godoc
+// @Summary      Update a zone in a competition
+// @Description  Updates an existing zone in a competition
+// @Tags         competition
+// @Accept       json
+// @Produce      json
+// @Param        Cookie  header string    true  "Authentication cookie"
+// @Param        competition  body       models.CompetitionScaleInput  true  "Competition data"
+// @Success      200           {object}  gin.H       			 						 "Returns success message"
+// @Failure      400           {object}  models.ErrorResponse          "Bad Request"
+// @Failure      401           {object}  models.ErrorResponse          "Unauthorized (invalid credentials)"
+// @Failure      404           {object}  models.ErrorResponse          "Zone not found"
+// @Failure      500           {object}  models.ErrorResponse          "Internal Server Error"
+// @Router       /competition/zone [put]
+func (s *Server) updateZoneInCompetition(c *gin.Context) {
+	var competitionScaleInput models.CompetitionScaleInput
+	if err := c.ShouldBindJSON(&competitionScaleInput); err != nil {
+		RespondError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	if competitionScaleInput.CompetitionID == 0 {
+		RespondError(c, http.StatusBadRequest, errors.New("competition ID is required"))
+		return
+	}
+
+	role := fmt.Sprintf("admin:%d", competitionScaleInput.CompetitionID)
+	if !middlewares.HasRole(c, role) {
+		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+		return
+	}
+
+	scale := aggregate.NewScale()
+	scale.SetCompetitionID(competitionScaleInput.CompetitionID)
+	scale.SetCategory(competitionScaleInput.Category)
+	scale.SetZone(competitionScaleInput.Zone)
+	scale.SetPointsDoor1(competitionScaleInput.PointsDoor1)
+	scale.SetPointsDoor2(competitionScaleInput.PointsDoor2)
+	scale.SetPointsDoor3(competitionScaleInput.PointsDoor3)
+	scale.SetPointsDoor4(competitionScaleInput.PointsDoor4)
+	scale.SetPointsDoor5(competitionScaleInput.PointsDoor5)
+	scale.SetPointsDoor6(competitionScaleInput.PointsDoor6)
+
+	err := s.competitionService.UpdateScale(c, competitionScaleInput.CompetitionID, scale)
+	if err != nil {
+		if errors.Is(err, repository.ErrScaleNotFound) {
+			RespondError(c, http.StatusNotFound, errors.New("zone not found"))
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Zone updated successfully"})
+}

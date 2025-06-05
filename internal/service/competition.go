@@ -218,7 +218,7 @@ func (s *CompetitionService) AddScale(ctx context.Context, competitionID int32, 
 
 func (s *CompetitionService) UpdateScale(ctx context.Context, competitionID int32, scale *aggregate.Scale) error {
 	// check if scale exists
-	scale, err := s.scaleRepo.GetScale(ctx, competitionID, scale.GetCategory(), scale.GetZone())
+	_, err := s.scaleRepo.GetScale(ctx, competitionID, scale.GetCategory(), scale.GetZone())
 	if err != nil {
 		return err
 	}
