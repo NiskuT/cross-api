@@ -225,7 +225,33 @@ func (s *UserService) AddUserToCompetition(ctx context.Context, email string, co
 
 	user.AddRole(newRole)
 	// Save the changes
-	return s.userRepo.UpdateUser(ctx, user)
+	err = s.userRepo.UpdateUser(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	// Send notification email to existing user
+	subject := "Cross Competition - Nouvelle Invitation d'Arbitre"
+	body := fmt.Sprintf(`
+		<html>
+		<body>
+			<h2>Nouvelle Invitation - Cross Competition</h2>
+			<p>Cher/Chère %s %s,</p>
+			<p>Vous avez été invité(e) en tant qu'arbitre pour une nouvelle compétition (ID : %d).</p>
+			<p>Vous pouvez vous connecter avec vos identifiants existants sur notre plateforme.</p>
+			<p>Si vous avez oublié votre mot de passe, utilisez la fonction "Mot de passe oublié" sur la page de connexion.</p>
+			<p>Cordialement,<br>L'équipe Cross Competition</p>
+		</body>
+		</html>
+	`, user.GetFirstName(), user.GetLastName(), competitionID)
+
+	err = s.sendEmail(email, subject, body)
+	if err != nil {
+		// Note: Even if email sending fails, the role has been added successfully
+		return fmt.Errorf("referee role added but email notification failed: %w", err)
+	}
+
+	return nil
 }
 
 func (s *UserService) SetUserAsAdmin(ctx context.Context, email string, competitionID int32) (*aggregate.JwtToken, error) {
