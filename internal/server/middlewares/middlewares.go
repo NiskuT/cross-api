@@ -16,6 +16,8 @@ const (
 	RefreshToken = "refresh_token"
 )
 
+var SecureMode = true
+
 // extractAccessToken retrieves the access token from the cookie
 func extractAccessToken(c *gin.Context) (string, error) {
 	tokenStr, err := c.Cookie(AccessToken)
@@ -52,8 +54,8 @@ func handleExpiredToken(c *gin.Context, userService service.UserService) (bool, 
 		return false, errors.New("invalid refresh token")
 	}
 
-	c.SetCookie(AccessToken, tokens.GetAccessToken(), 0, "/", "", true, true)
-	c.SetCookie(RefreshToken, tokens.GetRefreshToken(), 0, "/", "", true, true)
+	c.SetCookie(AccessToken, tokens.GetAccessToken(), 0, "/", "", SecureMode, true)
+	c.SetCookie(RefreshToken, tokens.GetRefreshToken(), 0, "/", "", SecureMode, true)
 
 	return true, nil
 }

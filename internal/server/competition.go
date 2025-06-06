@@ -65,8 +65,8 @@ func (s *Server) createCompetition(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(AccessToken, newToken.GetAccessToken(), 0, "/", "", true, true)
-	c.SetCookie(RefreshToken, newToken.GetRefreshToken(), 0, "/", "", true, true)
+	c.SetCookie(AccessToken, newToken.GetAccessToken(), 0, "/", "", middlewares.SecureMode, true)
+	c.SetCookie(RefreshToken, newToken.GetRefreshToken(), 0, "/", "", middlewares.SecureMode, true)
 
 	res := models.CompetitionResponse{
 		ID:          competitionID,

@@ -52,6 +52,7 @@ type Config struct {
 	Jwt          Jwt
 	AllowOrigins []string
 	Email        EmailConfig
+	SecureMode   bool
 }
 
 func New() *Config {
@@ -113,6 +114,8 @@ func (c *Config) Load() {
 	allowOrigins := strings.Split(origins, ",")
 	c.AllowOrigins = allowOrigins
 
+	c.SecureMode = getBoolFromEnv("SECURE_MODE")
+
 	log.Info().Msgf("%s environment loaded successfully !", appEnv)
 }
 
@@ -137,4 +140,14 @@ func getStringFromEnv(key string) string {
 	}
 
 	return myString
+}
+
+func getBoolFromEnv(key string) bool {
+	myBool := viper.GetBool(key)
+
+	if !myBool {
+		log.Warn().Msgf("Environment variable %s is not set", key)
+	}
+
+	return myBool
 }

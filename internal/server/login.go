@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/NiskuT/cross-api/internal/domain/models"
+	"github.com/NiskuT/cross-api/internal/server/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
@@ -50,8 +51,8 @@ func (s *Server) login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(AccessToken, user.GetAccessToken(), 0, "/", "", true, true)
-	c.SetCookie(RefreshToken, user.GetRefreshToken(), 0, "/", "", true, true)
+	c.SetCookie(AccessToken, user.GetAccessToken(), 0, "/", "", middlewares.SecureMode, true)
+	c.SetCookie(RefreshToken, user.GetRefreshToken(), 0, "/", "", middlewares.SecureMode, true)
 
 	c.JSON(http.StatusOK, models.RoleResponse{
 		Roles: user.GetRoles(),
@@ -68,10 +69,10 @@ func (s *Server) login(c *gin.Context) {
 // @Router       /logout [post]
 func (s *Server) logout(c *gin.Context) {
 	// Clear the access token cookie
-	c.SetCookie(AccessToken, "", -1, "/", "", true, true)
+	c.SetCookie(AccessToken, "", -1, "/", "", middlewares.SecureMode, true)
 
 	// Clear the refresh token cookie
-	c.SetCookie(RefreshToken, "", -1, "/", "", true, true)
+	c.SetCookie(RefreshToken, "", -1, "/", "", middlewares.SecureMode, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Successfully logged out",

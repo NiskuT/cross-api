@@ -88,6 +88,8 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	middlewares.SecureMode = cfg.SecureMode
+
 	router.MaxMultipartMemory = 5 << 30
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
