@@ -17,8 +17,9 @@ import (
 
 // Define error constants
 var (
-	ErrInvalidFileFormat = errors.New("invalid file format: expected CSV or Excel file with columns for last name, first name, and dossard number")
+	ErrInvalidFileFormat = errors.New("invalid file format: expected CSV or Excel file with columns for dossard number, category, last name, first name, and gender (H/F)")
 	ErrParticipantExists = errors.New("participant with this dossard number already exists in the competition")
+	ErrCategoryAndGender = errors.New("category and gender cannot be empty")
 )
 
 type CompetitionService struct {
@@ -93,7 +94,7 @@ func isParticipantAlreadyExistsError(err error) bool {
 }
 
 // AddParticipants creates multiple participants from a CSV or Excel file for a competition
-func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID int32, category string, file io.Reader, filename string) error {
+func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID int32, file io.Reader, filename string) error {
 	// Check if competition exists
 	_, err := s.competitionRepo.GetCompetition(ctx, competitionID)
 	if err != nil {
@@ -135,19 +136,30 @@ func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID 
 			continue
 		}
 
-		// File should have at least 3 columns: last name, first name, dossard number
-		if len(row) < 3 {
-			return fmt.Errorf("invalid format on row %d: expected at least 3 columns (last name, first name, dossard number)", i+1)
+		// File should have at least 5 columns: dossard number, category, last name, first name, gender
+		if len(row) < 5 {
+			return fmt.Errorf("invalid format on row %d: expected 5 columns (dossard number, category, last name, first name, gender)", i+1)
 		}
 
-		lastName := strings.TrimSpace(row[0])
-		firstName := strings.TrimSpace(row[1])
-
-		// Parse dossard number
-		dossardStr := strings.TrimSpace(row[2])
+		// Parse dossard number (first column)
+		dossardStr := strings.TrimSpace(row[0])
 		dossard, err := strconv.ParseInt(dossardStr, 10, 32)
 		if err != nil {
 			return fmt.Errorf("invalid dossard number on row %d: %w", i+1, err)
+		}
+
+		// Get category from file (second column)
+		categoryFromFile := strings.TrimSpace(row[1])
+		// Get last name (third column)
+		lastName := strings.TrimSpace(row[2])
+		// Get first name (fourth column)
+		firstName := strings.TrimSpace(row[3])
+		// Get gender (fifth column)
+		gender := strings.TrimSpace(strings.ToUpper(row[4]))
+
+		// Validate gender
+		if gender != "H" && gender != "F" {
+			return fmt.Errorf("invalid gender on row %d: expected 'H' or 'F', got '%s'", i+1, gender)
 		}
 
 		// Create participant
@@ -156,7 +168,8 @@ func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID 
 		participant.SetDossardNumber(int32(dossard))
 		participant.SetFirstName(firstName)
 		participant.SetLastName(lastName)
-		participant.SetCategory(category)
+		participant.SetCategory(categoryFromFile)
+		participant.SetGender(gender)
 
 		// Add participant to database
 		err = s.participantRepo.CreateParticipant(ctx, participant)
@@ -302,18 +315,16 @@ func (s *CompetitionService) DeleteScale(ctx context.Context, competitionID int3
 	return s.scaleRepo.DeleteScale(ctx, competitionID, category, zone)
 }
 
-func (s *CompetitionService) GetLiveranking(ctx context.Context, competitionID int32, category string, pageNumber, pageSize int32) ([]*aggregate.Liveranking, int32, error) {
+func (s *CompetitionService) GetLiveranking(ctx context.Context, competitionID int32, category, gender string, pageNumber, pageSize int32) ([]*aggregate.Liveranking, int32, error) {
 	// check if competition exists
 	_, err := s.competitionRepo.GetCompetition(ctx, competitionID)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// If category is empty, get all rankings
-	if category == "" {
-		return s.liverankingRepo.ListLiveranking(ctx, competitionID, pageNumber, pageSize)
+	if category == "" && gender == "" {
+		return nil, 0, ErrCategoryAndGender
 	}
 
-	// Get rankings for specific category
-	return s.liverankingRepo.ListLiverankingByCategory(ctx, competitionID, category, pageNumber, pageSize)
+	return s.liverankingRepo.ListLiverankingByCategoryAndGender(ctx, competitionID, category, gender, pageNumber, pageSize)
 }

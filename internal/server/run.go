@@ -67,6 +67,7 @@ func (s *Server) getParticipant(c *gin.Context) {
 		FirstName:     participant.GetFirstName(),
 		LastName:      participant.GetLastName(),
 		Category:      participant.GetCategory(),
+		Gender:        participant.GetGender(),
 	}
 
 	c.JSON(http.StatusOK, response)

@@ -154,15 +154,8 @@
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Participant category",
-                        "name": "category",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
                         "type": "file",
-                        "description": "CSV or Excel file with participants data (format: last name, first name, dossard number)",
+                        "description": "CSV or Excel file with participants data (format: dossard number, category, last name, first name, gender)",
                         "name": "file",
                         "in": "formData",
                         "required": true
@@ -442,7 +435,7 @@
         },
         "/competition/{competitionID}/liveranking": {
             "get": {
-                "description": "Retrieves the live ranking for a competition with optional category filtering and pagination",
+                "description": "Retrieves live ranking for a competition with optional category and gender filtering",
                 "consumes": [
                     "application/json"
                 ],
@@ -452,7 +445,7 @@
                 "tags": [
                     "competition"
                 ],
-                "summary": "Get live ranking for a competition",
+                "summary": "Get live ranking",
                 "parameters": [
                     {
                         "type": "string",
@@ -472,6 +465,12 @@
                         "type": "string",
                         "description": "Category filter (optional)",
                         "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Gender filter (optional, H or F)",
+                        "name": "gender",
                         "in": "query"
                     },
                     {
@@ -1080,6 +1079,9 @@
                 "competition_id": {
                     "type": "integer"
                 },
+                "gender": {
+                    "type": "string"
+                },
                 "page": {
                     "type": "integer"
                 },
@@ -1110,6 +1112,9 @@
                     "type": "integer"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "last_name": {
@@ -1151,6 +1156,7 @@
                 "competition_id",
                 "dossard_number",
                 "first_name",
+                "gender",
                 "last_name"
             ],
             "properties": {
@@ -1164,6 +1170,9 @@
                     "type": "integer"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "last_name": {
@@ -1195,6 +1204,9 @@
                     "type": "integer"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "last_name": {

@@ -30,6 +30,10 @@ func (p *Participant) GetCategory() string {
 	return p.participant.Category
 }
 
+func (p *Participant) GetGender() string {
+	return p.participant.Gender
+}
+
 func (p *Participant) SetCompetitionID(competitionID int32) {
 	p.participant.CompetitionID = competitionID
 }
@@ -48,4 +52,8 @@ func (p *Participant) SetLastName(lastName string) {
 
 func (p *Participant) SetCategory(category string) {
 	p.participant.Category = category
+}
+
+func (p *Participant) SetGender(gender string) {
+	p.participant.Gender = gender
 }

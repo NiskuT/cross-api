@@ -101,6 +101,8 @@ definitions:
         type: string
       competition_id:
         type: integer
+      gender:
+        type: string
       page:
         type: integer
       page_size:
@@ -121,6 +123,8 @@ definitions:
       dossard:
         type: integer
       first_name:
+        type: string
+      gender:
         type: string
       last_name:
         type: string
@@ -153,6 +157,8 @@ definitions:
         type: integer
       first_name:
         type: string
+      gender:
+        type: string
       last_name:
         type: string
     required:
@@ -160,6 +166,7 @@ definitions:
     - competition_id
     - dossard_number
     - first_name
+    - gender
     - last_name
     type: object
   models.ParticipantListResponse:
@@ -178,6 +185,8 @@ definitions:
       dossard_number:
         type: integer
       first_name:
+        type: string
+      gender:
         type: string
       last_name:
         type: string
@@ -378,8 +387,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves the live ranking for a competition with optional category
-        filtering and pagination
+      description: Retrieves live ranking for a competition with optional category
+        and gender filtering
       parameters:
       - description: Authentication cookie
         in: header
@@ -394,6 +403,10 @@ paths:
       - description: Category filter (optional)
         in: query
         name: category
+        type: string
+      - description: Gender filter (optional, H or F)
+        in: query
+        name: gender
         type: string
       - description: 'Page number (default: 1)'
         in: query
@@ -426,7 +439,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.ErrorResponse'
-      summary: Get live ranking for a competition
+      summary: Get live ranking
       tags:
       - competition
   /competition/{competitionID}/participant/{dossard}:
@@ -583,13 +596,8 @@ paths:
         name: competitionID
         required: true
         type: integer
-      - description: Participant category
-        in: formData
-        name: category
-        required: true
-        type: string
-      - description: 'CSV or Excel file with participants data (format: last name,
-          first name, dossard number)'
+      - description: 'CSV or Excel file with participants data (format: dossard number,
+          category, last name, first name, gender)'
         in: formData
         name: file
         required: true

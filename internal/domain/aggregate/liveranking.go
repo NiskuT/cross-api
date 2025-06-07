@@ -36,6 +36,10 @@ func (l *Liveranking) GetCategory() string {
 	return l.participant.Category
 }
 
+func (l *Liveranking) GetGender() string {
+	return l.participant.Gender
+}
+
 func (l *Liveranking) GetNumberOfRuns() int32 {
 	return l.numberOfRuns
 }
@@ -70,6 +74,10 @@ func (l *Liveranking) SetLastName(lastName string) {
 
 func (l *Liveranking) SetCategory(category string) {
 	l.participant.Category = category
+}
+
+func (l *Liveranking) SetGender(gender string) {
+	l.participant.Gender = gender
 }
 
 func (l *Liveranking) SetNumberOfRuns(numberOfRuns int32) {

@@ -7,6 +7,7 @@ type ParticipantInput struct {
 	FirstName     string `json:"first_name" binding:"required"`
 	LastName      string `json:"last_name" binding:"required"`
 	Category      string `json:"category" binding:"required"`
+	Gender        string `json:"gender" binding:"required"`
 }
 
 // ParticipantResponse represents the response for a participant
@@ -16,6 +17,7 @@ type ParticipantResponse struct {
 	FirstName     string `json:"first_name"`
 	LastName      string `json:"last_name"`
 	Category      string `json:"category"`
+	Gender        string `json:"gender"`
 }
 
 // ParticipantListResponse represents the response for a list of participants

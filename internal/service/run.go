@@ -134,6 +134,7 @@ func (s *RunService) CreateRun(ctx context.Context, run *aggregate.Run) error {
 	liveranking.SetFirstName(participant.GetFirstName())
 	liveranking.SetLastName(participant.GetLastName())
 	liveranking.SetCategory(participant.GetCategory())
+	liveranking.SetGender(participant.GetGender())
 	liveranking.SetTotalPoints(totalPoints)
 	liveranking.SetPenality(run.GetPenality())
 	liveranking.SetChronoSec(run.GetChronoSec())

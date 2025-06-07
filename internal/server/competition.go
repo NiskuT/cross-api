@@ -176,8 +176,7 @@ func (s *Server) addZoneToCompetition(c *gin.Context) {
 // @Produce      json
 // @Param        Cookie  header string    true  "Authentication cookie"
 // @Param        competitionID  formData  int     true  "Competition ID"
-// @Param        category       formData  string  true  "Participant category"
-// @Param        file           formData  file    true  "CSV or Excel file with participants data (format: last name, first name, dossard number)"
+// @Param        file           formData  file    true  "CSV or Excel file with participants data (format: dossard number, category, last name, first name, gender)"
 // @Success      200           {object}  gin.H                        "Successfully added participants"
 // @Failure      400           {object}  models.ErrorResponse         "Bad Request"
 // @Failure      401           {object}  models.ErrorResponse         "Unauthorized (invalid credentials)"
@@ -197,12 +196,6 @@ func (s *Server) addParticipantsToCompetition(c *gin.Context) {
 	}
 	competitionID := int32(competitionIDInt)
 
-	category := c.PostForm("category")
-	if category == "" {
-		RespondError(c, http.StatusBadRequest, errors.New("category is required"))
-		return
-	}
-
 	role := fmt.Sprintf("admin:%d", competitionID)
 	if !middlewares.HasRole(c, role) {
 		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
@@ -219,7 +212,7 @@ func (s *Server) addParticipantsToCompetition(c *gin.Context) {
 	// Get filename from the file header
 	filename := fileHeader.Filename
 
-	err = s.competitionService.AddParticipants(c, competitionID, category, file, filename)
+	err = s.competitionService.AddParticipants(c, competitionID, file, filename)
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, err)
 		return
@@ -463,14 +456,15 @@ func (s *Server) deleteZoneFromCompetition(c *gin.Context) {
 }
 
 // getLiveranking godoc
-// @Summary      Get live ranking for a competition
-// @Description  Retrieves the live ranking for a competition with optional category filtering and pagination
+// @Summary      Get live ranking
+// @Description  Retrieves live ranking for a competition with optional category and gender filtering
 // @Tags         competition
 // @Accept       json
 // @Produce      json
 // @Param        Cookie  header string    true  "Authentication cookie"
 // @Param        competitionID  path      int     true  "Competition ID"
 // @Param        category       query     string  false "Category filter (optional)"
+// @Param        gender         query     string  false "Gender filter (optional, H or F)"
 // @Param        page           query     int     false "Page number (default: 1)"
 // @Param        page_size      query     int     false "Page size (default: 10)"
 // @Success      200           {object}  models.LiverankingListResponse     "Returns live ranking data"
@@ -497,10 +491,17 @@ func (s *Server) getLiveranking(c *gin.Context) {
 
 	// Get query parameters
 	category := c.Query("category")
+	gender := c.Query("gender")
 	page, pageSize := getPagination(c)
 
+	// Validate gender parameter if provided
+	if gender == "" || (gender != "H" && gender != "F") {
+		RespondError(c, http.StatusBadRequest, errors.New("gender must be 'H' or 'F'"))
+		return
+	}
+
 	// Get live ranking from service
-	rankings, total, err := s.competitionService.GetLiveranking(c, int32(competitionID), category, page, pageSize)
+	rankings, total, err := s.competitionService.GetLiveranking(c, int32(competitionID), category, gender, page, pageSize)
 	if err != nil {
 		if errors.Is(err, repository.ErrCompetitionNotFound) {
 			RespondError(c, http.StatusNotFound, errors.New("competition not found"))
@@ -514,6 +515,7 @@ func (s *Server) getLiveranking(c *gin.Context) {
 	response := models.LiverankingListResponse{
 		CompetitionID: int32(competitionID),
 		Category:      category,
+		Gender:        gender,
 		Page:          page,
 		PageSize:      pageSize,
 		Total:         total,
@@ -530,6 +532,7 @@ func (s *Server) getLiveranking(c *gin.Context) {
 			FirstName:    ranking.GetFirstName(),
 			LastName:     ranking.GetLastName(),
 			Category:     ranking.GetCategory(),
+			Gender:       ranking.GetGender(),
 			NumberOfRuns: ranking.GetNumberOfRuns(),
 			TotalPoints:  ranking.GetTotalPoints(),
 			Penality:     ranking.GetPenality(),
@@ -575,6 +578,7 @@ func (s *Server) createParticipant(c *gin.Context) {
 	participant.SetFirstName(participantInput.FirstName)
 	participant.SetLastName(participantInput.LastName)
 	participant.SetCategory(participantInput.Category)
+	participant.SetGender(participantInput.Gender)
 
 	// Create participant through service
 	err := s.competitionService.CreateParticipant(c, participant)
@@ -600,6 +604,7 @@ func (s *Server) createParticipant(c *gin.Context) {
 		FirstName:     participant.GetFirstName(),
 		LastName:      participant.GetLastName(),
 		Category:      participant.GetCategory(),
+		Gender:        participant.GetGender(),
 	}
 
 	c.JSON(http.StatusCreated, response)
@@ -667,6 +672,7 @@ func (s *Server) listParticipantsByCategory(c *gin.Context) {
 			FirstName:     participant.GetFirstName(),
 			LastName:      participant.GetLastName(),
 			Category:      participant.GetCategory(),
+			Gender:        participant.GetGender(),
 		}
 	}
 

@@ -160,15 +160,8 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Participant category",
-                        "name": "category",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
                         "type": "file",
-                        "description": "CSV or Excel file with participants data (format: last name, first name, dossard number)",
+                        "description": "CSV or Excel file with participants data (format: dossard number, category, last name, first name, gender)",
                         "name": "file",
                         "in": "formData",
                         "required": true
@@ -448,7 +441,7 @@ const docTemplate = `{
         },
         "/competition/{competitionID}/liveranking": {
             "get": {
-                "description": "Retrieves the live ranking for a competition with optional category filtering and pagination",
+                "description": "Retrieves live ranking for a competition with optional category and gender filtering",
                 "consumes": [
                     "application/json"
                 ],
@@ -458,7 +451,7 @@ const docTemplate = `{
                 "tags": [
                     "competition"
                 ],
-                "summary": "Get live ranking for a competition",
+                "summary": "Get live ranking",
                 "parameters": [
                     {
                         "type": "string",
@@ -478,6 +471,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Category filter (optional)",
                         "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Gender filter (optional, H or F)",
+                        "name": "gender",
                         "in": "query"
                     },
                     {
@@ -1086,6 +1085,9 @@ const docTemplate = `{
                 "competition_id": {
                     "type": "integer"
                 },
+                "gender": {
+                    "type": "string"
+                },
                 "page": {
                     "type": "integer"
                 },
@@ -1116,6 +1118,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "last_name": {
@@ -1157,6 +1162,7 @@ const docTemplate = `{
                 "competition_id",
                 "dossard_number",
                 "first_name",
+                "gender",
                 "last_name"
             ],
             "properties": {
@@ -1170,6 +1176,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "last_name": {
@@ -1201,6 +1210,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "last_name": {
