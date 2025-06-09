@@ -18,6 +18,9 @@ clean:
 build:
 	CGO_ENABLED=0 go build -o api cmd/api/main.go
 
+production:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o api cmd/api/main.go
+
 start:
 	export APP_ENV=local && go run cmd/api/main.go rest
 
