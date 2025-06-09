@@ -69,10 +69,19 @@ func extractUserFromClaims(claims jwt.MapClaims) (entity.UserToken, error) {
 		return customClaims, errors.New("invalid token issuer")
 	}
 
-	// Extract user ID and email
-	if sub, ok := claims["sub"].(int32); ok {
-		customClaims.Id = sub
+	// Extract user ID - handle both float64 (from JSON) and int32
+	if subVal, ok := claims["sub"]; ok {
+		switch sub := subVal.(type) {
+		case float64:
+			customClaims.Id = int32(sub)
+		case int32:
+			customClaims.Id = sub
+		case int:
+			customClaims.Id = int32(sub)
+		}
 	}
+
+	// Extract email
 	if email, ok := claims["email"].(string); ok {
 		customClaims.Email = email
 	}
