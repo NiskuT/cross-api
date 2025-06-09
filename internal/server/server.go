@@ -23,10 +23,13 @@ type Server struct {
 	userService        service.UserService
 	competitionService service.CompetitionService
 	runService         service.RunService
+	rateLimiter        *middlewares.RateLimiter
 }
 
 func NewServer(configs ...ServerConfiguration) (*Server, error) {
-	s := &Server{}
+	s := &Server{
+		rateLimiter: middlewares.NewRateLimiter(),
+	}
 	for _, config := range configs {
 		if err := config(s); err != nil {
 			return nil, err
@@ -79,6 +82,23 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 		router = gin.New()
 		router.Use(gin.Recovery())
 	}
+
+	// Configure trusted proxies for OVH SSL Gateway
+	trustedProxies := []string{
+		"213.32.4.0/24",  // OVH SSL Gateway range 1
+		"54.39.240.0/24", // OVH SSL Gateway range 2
+		"144.217.9.0/24", // OVH SSL Gateway range 3
+		"127.0.0.1",      // localhost
+	}
+
+	if err := router.SetTrustedProxies(trustedProxies); err != nil {
+		log.Warn().Err(err).Msg("Failed to set trusted proxies")
+	}
+
+	// Configure rate limiter with values from config
+	s.rateLimiter.SetLimit("login", cfg.RateLimit.LoginAttempts, cfg.RateLimit.LoginWindow)
+	s.rateLimiter.SetLimit("forgot-password", cfg.RateLimit.ForgotPasswordAttempts, cfg.RateLimit.ForgotPasswordWindow)
+
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.AllowOrigins,
 		AllowMethods:     []string{"POST", "GET", "PUT", "DELETE", "OPTIONS", "PATCH"},
@@ -94,9 +114,10 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	router.PUT("/login", s.login)
+	// Apply rate limiting to authentication endpoints
+	router.PUT("/login", s.rateLimiter.Limit("login"), s.login)
 	router.POST("/logout", s.logout)
-	router.POST("/auth/forgot-password", s.forgotPassword)
+	router.POST("/auth/forgot-password", s.rateLimiter.Limit("forgot-password"), s.forgotPassword)
 
 	router.Use(middlewares.Authentication(cfg.Jwt.SecretKey, s.userService))
 

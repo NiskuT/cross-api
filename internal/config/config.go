@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -45,6 +46,13 @@ type EmailConfig struct {
 	From     string
 }
 
+type RateLimitConfig struct {
+	LoginAttempts          int
+	LoginWindow            time.Duration
+	ForgotPasswordAttempts int
+	ForgotPasswordWindow   time.Duration
+}
+
 type Config struct {
 	Service      Service
 	Database     Database
@@ -53,6 +61,7 @@ type Config struct {
 	AllowOrigins []string
 	Email        EmailConfig
 	SecureMode   bool
+	RateLimit    RateLimitConfig
 }
 
 func New() *Config {
@@ -109,6 +118,12 @@ func (c *Config) Load() {
 	c.Email.Password = getStringFromEnv("EMAIL_PASSWORD")
 	c.Email.From = getStringFromEnv("EMAIL_FROM")
 
+	// Rate limiting configuration with defaults
+	c.RateLimit.LoginAttempts = getIntFromEnvWithDefault("LOGIN_RATE_LIMIT_ATTEMPTS", 5)
+	c.RateLimit.LoginWindow = getDurationFromEnvWithDefault("LOGIN_RATE_LIMIT_WINDOW", 5*time.Minute)
+	c.RateLimit.ForgotPasswordAttempts = getIntFromEnvWithDefault("FORGOT_PASSWORD_RATE_LIMIT_ATTEMPTS", 3)
+	c.RateLimit.ForgotPasswordWindow = getDurationFromEnvWithDefault("FORGOT_PASSWORD_RATE_LIMIT_WINDOW", 1*time.Hour)
+
 	// Origins
 	origins := getStringFromEnv("ALLOW_ORIGINS")
 	allowOrigins := strings.Split(origins, ",")
@@ -130,6 +145,38 @@ func getIntFromEnv(key string) int {
 	}
 
 	return myInt
+}
+
+func getIntFromEnvWithDefault(key string, defaultValue int) int {
+	valueStr := viper.GetString(key)
+	if valueStr == "" {
+		log.Info().Msgf("Environment variable %s not set, using default: %d", key, defaultValue)
+		return defaultValue
+	}
+
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		log.Warn().Msgf("Invalid value for %s: %s, using default: %d", key, valueStr, defaultValue)
+		return defaultValue
+	}
+
+	return value
+}
+
+func getDurationFromEnvWithDefault(key string, defaultValue time.Duration) time.Duration {
+	valueStr := viper.GetString(key)
+	if valueStr == "" {
+		log.Info().Msgf("Environment variable %s not set, using default: %s", key, defaultValue)
+		return defaultValue
+	}
+
+	duration, err := time.ParseDuration(valueStr)
+	if err != nil {
+		log.Warn().Msgf("Invalid duration for %s: %s, using default: %s", key, valueStr, defaultValue)
+		return defaultValue
+	}
+
+	return duration
 }
 
 func getStringFromEnv(key string) string {
