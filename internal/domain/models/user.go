@@ -18,3 +18,12 @@ type UpdateUser struct {
 	AvatarUrl string `json:"avatar_url"`
 	Password  string `json:"password"`
 }
+
+type ChangePasswordInput struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=8"`
+}
+
+type ForgotPasswordInput struct {
+	Email string `json:"email" binding:"required,email"`
+}

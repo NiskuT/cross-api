@@ -12,4 +12,6 @@ type UserService interface {
 	AddUserToCompetition(ctx context.Context, email string, competitionID int32) error
 	InviteUser(ctx context.Context, firstName, lastName, email string, competitionID int32) error
 	SetUserAsAdmin(ctx context.Context, email string, competitionID int32) (*aggregate.JwtToken, error)
+	ChangePassword(ctx context.Context, userID int32, currentPassword, newPassword string) error
+	ForgotPassword(ctx context.Context, email string) error
 }

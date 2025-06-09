@@ -78,3 +78,83 @@ func (s *Server) logout(c *gin.Context) {
 		"message": "Successfully logged out",
 	})
 }
+
+// changePassword godoc
+// @Summary      Change user password
+// @Description  Allows authenticated users to change their password by providing current and new password
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        Cookie              header    string                         true  "Authentication cookie"
+// @Param        changePasswordRequest body      models.ChangePasswordInput     true  "Password change data"
+// @Success      200                 {object}  gin.H                          "Password changed successfully"
+// @Failure      400                 {object}  models.ErrorResponse           "Bad Request"
+// @Failure      401                 {object}  models.ErrorResponse           "Unauthorized (invalid current password)"
+// @Failure      500                 {object}  models.ErrorResponse           "Internal Server Error"
+// @Router       /auth/password [put]
+func (s *Server) changePassword(c *gin.Context) {
+	var changePasswordRequest models.ChangePasswordInput
+	if err := c.ShouldBindJSON(&changePasswordRequest); err != nil {
+		RespondError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	// Get user from context (set by authentication middleware)
+	user, err := middlewares.GetUser(c)
+	if err != nil {
+		RespondError(c, http.StatusUnauthorized, err)
+		return
+	}
+
+	// Call service to change password
+	err = s.userService.ChangePassword(
+		c.Request.Context(),
+		user.Id,
+		changePasswordRequest.CurrentPassword,
+		changePasswordRequest.NewPassword,
+	)
+
+	if err != nil {
+		if err.Error() == "invalid email or password" {
+			RespondError(c, http.StatusUnauthorized, errors.New("current password is incorrect"))
+		} else {
+			RespondError(c, http.StatusInternalServerError, err)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Password changed successfully",
+	})
+}
+
+// forgotPassword godoc
+// @Summary      Reset forgotten password
+// @Description  Generates a new password and sends it to the user's email address
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        forgotPasswordRequest body      models.ForgotPasswordInput     true  "Email for password reset"
+// @Success      200                   {object}  gin.H                          "Password reset email sent"
+// @Failure      400                   {object}  models.ErrorResponse           "Bad Request"
+// @Failure      500                   {object}  models.ErrorResponse           "Internal Server Error"
+// @Router       /auth/forgot-password [post]
+func (s *Server) forgotPassword(c *gin.Context) {
+	var forgotPasswordRequest models.ForgotPasswordInput
+	if err := c.ShouldBindJSON(&forgotPasswordRequest); err != nil {
+		RespondError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	// Call service to reset password
+	err := s.userService.ForgotPassword(c.Request.Context(), forgotPasswordRequest.Email)
+	if err != nil {
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Always return success for security reasons (don't reveal if email exists)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "If the email address exists in our system, a new password has been sent to it",
+	})
+}

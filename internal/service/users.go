@@ -337,3 +337,85 @@ func (s *UserService) InviteUser(ctx context.Context, firstName, lastName, email
 
 	return nil
 }
+
+// ChangePassword allows a user to change their password by verifying their current password
+func (s *UserService) ChangePassword(ctx context.Context, userID int32, currentPassword, newPassword string) error {
+	// Get the user by ID
+	user, err := s.userRepo.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.GetPasswordHash()), []byte(currentPassword)); err != nil {
+		return ErrInvalidCredentials
+	}
+
+	// Hash the new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash new password: %w", err)
+	}
+
+	// Update the user's password
+	user.SetPasswordHash(string(hashedPassword))
+
+	// Save the changes
+	err = s.userRepo.UpdateUser(ctx, user)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	return nil
+}
+
+// ForgotPassword generates a new password and sends it to the user's email
+func (s *UserService) ForgotPassword(ctx context.Context, email string) error {
+	// Get the user by email
+	user, err := s.userRepo.GetUserByEmail(ctx, email)
+	if err != nil {
+		// For security reasons, we don't reveal if the email exists or not
+		// We return success even if the email doesn't exist
+		return nil
+	}
+
+	// Generate a new random password
+	newPassword := generateRandomPassword(12)
+
+	// Hash the new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash new password: %w", err)
+	}
+
+	// Update the user's password
+	user.SetPasswordHash(string(hashedPassword))
+
+	// Save the changes
+	err = s.userRepo.UpdateUser(ctx, user)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	// Send the new password by email
+	subject := "Cross Competition - Nouveau mot de passe"
+	body := fmt.Sprintf(`
+		<html>
+		<body>
+			<h2>Nouveau mot de passe - Cross Competition</h2>
+			<p>Cher/Chère %s %s,</p>
+			<p>Votre demande de réinitialisation de mot de passe a été traitée.</p>
+			<p>Voici votre nouveau mot de passe : <strong>%s</strong></p>
+			<p>Nous vous recommandons de changer ce mot de passe après votre prochaine connexion.</p>
+			<p>Cordialement,<br>L'équipe Cross Competition</p>
+		</body>
+		</html>
+	`, user.GetFirstName(), user.GetLastName(), newPassword)
+
+	err = s.sendEmail(email, subject, body)
+	if err != nil {
+		return fmt.Errorf("failed to send new password email: %w", err)
+	}
+
+	return nil
+}

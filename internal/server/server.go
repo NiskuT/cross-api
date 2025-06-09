@@ -96,9 +96,11 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 
 	router.PUT("/login", s.login)
 	router.POST("/logout", s.logout)
+	router.POST("/auth/forgot-password", s.forgotPassword)
 
 	router.Use(middlewares.Authentication(cfg.Jwt.SecretKey, s.userService))
 
+	router.PUT("/auth/password", s.changePassword)
 	router.POST("/competition", s.createCompetition)
 	router.GET("/competition", s.listCompetitions)
 	router.POST("/competition/zone", s.addZoneToCompetition)
