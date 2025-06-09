@@ -186,7 +186,7 @@ func (r *SQLRunRepository) ListRunsByDossardWithDetails(ctx context.Context, com
 			r.competition_id, r.dossard, r.run_number, r.zone,
 			r.door1, r.door2, r.door3, r.door4, r.door5, r.door6,
 			r.penality, r.chrono_sec, r.referee_id,
-			COALESCE(u.name, '') as referee_name
+			COALESCE(CONCAT(u.first_name, ' ', u.last_name), '') as referee_name
 		FROM runs r
 		LEFT JOIN users u ON r.referee_id = u.id
 		WHERE r.competition_id = ? AND r.dossard = ?
