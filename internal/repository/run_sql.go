@@ -179,6 +179,65 @@ func (r *SQLRunRepository) ListRunsByDossard(ctx context.Context, competitionID 
 	return runs, nil
 }
 
+// ListRunsByDossardWithDetails retrieves all runs for a participant with referee names
+func (r *SQLRunRepository) ListRunsByDossardWithDetails(ctx context.Context, competitionID, dossard int32) ([]*aggregate.Run, error) {
+	query := `
+		SELECT 
+			r.competition_id, r.dossard, r.run_number, r.zone,
+			r.door1, r.door2, r.door3, r.door4, r.door5, r.door6,
+			r.penality, r.chrono_sec, r.referee_id,
+			COALESCE(u.name, '') as referee_name
+		FROM runs r
+		LEFT JOIN users u ON r.referee_id = u.id
+		WHERE r.competition_id = ? AND r.dossard = ?
+		ORDER BY r.run_number
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, competitionID, dossard)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var runs []*aggregate.Run
+	for rows.Next() {
+		var run Run
+		var refereeName string
+
+		err := rows.Scan(
+			&run.CompetitionID,
+			&run.Dossard,
+			&run.RunNumber,
+			&run.Zone,
+			&run.Door1,
+			&run.Door2,
+			&run.Door3,
+			&run.Door4,
+			&run.Door5,
+			&run.Door6,
+			&run.Penality,
+			&run.ChronoSec,
+			&run.RefereeId,
+			&refereeName,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Map to aggregate and set referee name
+		runAggregate := mapToRunAggregate(&run)
+		runAggregate.SetRefereeName(refereeName)
+
+		runs = append(runs, runAggregate)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return runs, nil
+}
+
 // CreateRun creates a new run with auto-incrementing run number per participant
 func (r *SQLRunRepository) CreateRun(ctx context.Context, run *aggregate.Run) error {
 	// First, verify that the participant exists

@@ -20,6 +20,9 @@ type RunService interface {
 	// ListRunsByDossard lists all runs for a participant in a competition
 	ListRunsByDossard(ctx context.Context, competitionID int32, dossard int32) ([]*aggregate.Run, error)
 
+	// ListRunsByDossardWithDetails lists all runs for a participant with referee information
+	ListRunsByDossardWithDetails(ctx context.Context, competitionID int32, dossard int32) ([]*aggregate.Run, error)
+
 	// UpdateRun updates an existing run
 	UpdateRun(ctx context.Context, run *aggregate.Run) error
 

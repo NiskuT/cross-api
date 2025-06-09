@@ -163,6 +163,11 @@ func (s *RunService) ListRunsByDossard(ctx context.Context, competitionID int32,
 	return s.runRepo.ListRunsByDossard(ctx, competitionID, dossard)
 }
 
+// ListRunsByDossardWithDetails lists all runs for a participant with referee names
+func (s *RunService) ListRunsByDossardWithDetails(ctx context.Context, competitionID, dossard int32) ([]*aggregate.Run, error) {
+	return s.runRepo.ListRunsByDossardWithDetails(ctx, competitionID, dossard)
+}
+
 // UpdateRun updates an existing run
 func (s *RunService) UpdateRun(ctx context.Context, run *aggregate.Run) error {
 	return s.runRepo.UpdateRun(ctx, run)

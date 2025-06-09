@@ -55,3 +55,42 @@ type RunResponse struct {
 	Penality      int32  `json:"penality"`
 	ChronoSec     int32  `json:"chrono_sec"`
 }
+
+// RunUpdateInput represents the input for updating a run
+type RunUpdateInput struct {
+	CompetitionID int32  `json:"competition_id" binding:"required"`
+	Dossard       int32  `json:"dossard" binding:"required"`
+	RunNumber     int32  `json:"run_number" binding:"required"`
+	Zone          string `json:"zone" binding:"required"`
+	Door1         bool   `json:"door1"`
+	Door2         bool   `json:"door2"`
+	Door3         bool   `json:"door3"`
+	Door4         bool   `json:"door4"`
+	Door5         bool   `json:"door5"`
+	Door6         bool   `json:"door6"`
+	Penality      int32  `json:"penality"`
+	ChronoSec     int32  `json:"chrono_sec"`
+}
+
+// RunDetailsResponse represents a detailed run response with referee and zone information
+type RunDetailsResponse struct {
+	CompetitionID int32  `json:"competition_id"`
+	Dossard       int32  `json:"dossard"`
+	RunNumber     int32  `json:"run_number"`
+	Zone          string `json:"zone"`
+	Door1         bool   `json:"door1"`
+	Door2         bool   `json:"door2"`
+	Door3         bool   `json:"door3"`
+	Door4         bool   `json:"door4"`
+	Door5         bool   `json:"door5"`
+	Door6         bool   `json:"door6"`
+	Penality      int32  `json:"penality"`
+	ChronoSec     int32  `json:"chrono_sec"`
+	RefereeID     int32  `json:"referee_id"`
+	RefereeName   string `json:"referee_name"`
+}
+
+// RunListResponse represents the response for a list of runs
+type RunListResponse struct {
+	Runs []*RunDetailsResponse `json:"runs"`
+}

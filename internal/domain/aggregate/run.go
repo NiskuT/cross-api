@@ -4,7 +4,8 @@ import "github.com/NiskuT/cross-api/internal/domain/entity"
 
 // Run is the aggregate root for run domain
 type Run struct {
-	run *entity.Run
+	run         *entity.Run
+	refereeName string // For detailed queries with referee information
 }
 
 // NewRun creates a new run aggregate
@@ -77,6 +78,11 @@ func (r *Run) GetRefereeId() int32 {
 	return r.run.RefereeId
 }
 
+// GetRefereeName returns the referee name (for detailed queries)
+func (r *Run) GetRefereeName() string {
+	return r.refereeName
+}
+
 // SetCompetitionID sets the competition ID
 func (r *Run) SetCompetitionID(competitionID int32) {
 	r.run.CompetitionID = competitionID
@@ -140,4 +146,9 @@ func (r *Run) SetChronoSec(chronoSec int32) {
 // SetRefereeId sets the referee ID
 func (r *Run) SetRefereeId(refereeId int32) {
 	r.run.RefereeId = refereeId
+}
+
+// SetRefereeName sets the referee name (for detailed queries)
+func (r *Run) SetRefereeName(refereeName string) {
+	r.refereeName = refereeName
 }

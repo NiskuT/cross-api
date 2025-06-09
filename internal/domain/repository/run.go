@@ -11,6 +11,7 @@ type RunRepository interface {
 	GetRun(ctx context.Context, competitionID, runNumber, dossard int32) (*aggregate.Run, error)
 	ListRuns(ctx context.Context, competitionID int32) ([]*aggregate.Run, error)
 	ListRunsByDossard(ctx context.Context, competitionID int32, dossard int32) ([]*aggregate.Run, error)
+	ListRunsByDossardWithDetails(ctx context.Context, competitionID int32, dossard int32) ([]*aggregate.Run, error)
 	UpdateRun(ctx context.Context, run *aggregate.Run) error
 	DeleteRun(ctx context.Context, competitionID, runNumber, dossard int32) error
 }

@@ -39,3 +39,15 @@ func checkHasAccessToCompetition(c *gin.Context, competitionID int32) error {
 
 	return nil
 }
+
+// checkHasAdminAccessToCompetition checks if user is admin of the competition or super admin
+// This is stricter than checkHasAccessToCompetition as it excludes regular referees
+func checkHasAdminAccessToCompetition(c *gin.Context, competitionID int32) error {
+	hasRole := middlewares.HasRole(c, fmt.Sprintf("admin:%d", competitionID)) ||
+		middlewares.HasRole(c, "admin:*")
+	if !hasRole {
+		return ErrForbidden
+	}
+
+	return nil
+}

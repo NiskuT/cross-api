@@ -98,6 +98,11 @@ The API is pre-configured to work with OVH SSL Gateway:
 - `POST /run` - Record a run result
 - `GET /competition/{id}/liveranking` - Get live rankings
 
+### Run Management (Admin Only)
+- `GET /competition/{competitionID}/participant/{dossard}/runs` - Get all runs for a participant with referee details
+- `PUT /run` - Update an existing run
+- `DELETE /run` - Delete a run
+
 ## Security Features
 
 - JWT-based authentication with refresh tokens
