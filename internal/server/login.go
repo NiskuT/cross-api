@@ -51,6 +51,10 @@ func (s *Server) login(c *gin.Context) {
 		return
 	}
 
+	// Reset rate limit on successful login
+	clientIP := s.rateLimiter.GetClientIP(c)
+	s.rateLimiter.ResetAttempts("login", clientIP)
+
 	c.SetCookie(AccessToken, user.GetAccessToken(), 0, "/", "", middlewares.SecureMode, true)
 	c.SetCookie(RefreshToken, user.GetRefreshToken(), 0, "/", "", middlewares.SecureMode, true)
 

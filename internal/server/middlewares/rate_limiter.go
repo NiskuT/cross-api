@@ -235,3 +235,18 @@ func (rl *RateLimiter) cleanup() {
 func (rl *RateLimiter) Stop() {
 	close(rl.stopChan)
 }
+
+// ResetAttempts clears the attempt history for a specific endpoint and IP
+// This should be called when authentication is successful to reset the rate limit
+func (rl *RateLimiter) ResetAttempts(endpoint, clientIP string) {
+	rl.mutex.Lock()
+	defer rl.mutex.Unlock()
+
+	key := endpoint + ":" + clientIP
+	delete(rl.attempts, key)
+}
+
+// GetClientIP extracts the real client IP from the gin context (public method)
+func (rl *RateLimiter) GetClientIP(c *gin.Context) string {
+	return rl.getClientIP(c)
+}
