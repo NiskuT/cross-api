@@ -168,12 +168,34 @@ func (s *RunService) ListRunsByDossardWithDetails(ctx context.Context, competiti
 	return s.runRepo.ListRunsByDossardWithDetails(ctx, competitionID, dossard)
 }
 
-// UpdateRun updates an existing run
+// UpdateRun updates an existing run and recalculates liveranking
 func (s *RunService) UpdateRun(ctx context.Context, run *aggregate.Run) error {
-	return s.runRepo.UpdateRun(ctx, run)
+	err := s.runRepo.UpdateRun(ctx, run)
+	if err != nil {
+		return err
+	}
+
+	// Recalculate liveranking for this participant
+	err = s.liverankingRepo.RecalculateLiveranking(ctx, run.GetCompetitionID(), run.GetDossard())
+	if err != nil {
+		return fmt.Errorf("failed to recalculate liveranking: %w", err)
+	}
+
+	return nil
 }
 
-// DeleteRun deletes a run
+// DeleteRun deletes a run and recalculates liveranking
 func (s *RunService) DeleteRun(ctx context.Context, competitionID, runNumber, dossard int32) error {
-	return s.runRepo.DeleteRun(ctx, competitionID, runNumber, dossard)
+	err := s.runRepo.DeleteRun(ctx, competitionID, runNumber, dossard)
+	if err != nil {
+		return err
+	}
+
+	// Recalculate liveranking for this participant
+	err = s.liverankingRepo.RecalculateLiveranking(ctx, competitionID, dossard)
+	if err != nil {
+		return fmt.Errorf("failed to recalculate liveranking: %w", err)
+	}
+
+	return nil
 }

@@ -268,3 +268,110 @@ func (r *SQLLiverankingRepository) ListLiverankingByCategoryAndGender(ctx contex
 
 	return liverankings, totalCount, nil
 }
+
+// RecalculateLiveranking recalculates the liveranking for a specific participant from all their runs
+func (r *SQLLiverankingRepository) RecalculateLiveranking(ctx context.Context, competitionID, dossard int32) error {
+	// First get all runs for this participant and calculate total points using scales
+	query := `
+		SELECT r.competition_id, r.dossard, r.zone, r.door1, r.door2, r.door3, r.door4, r.door5, r.door6, 
+		       r.penality, r.chrono_sec, p.category,
+		       s.points_door1, s.points_door2, s.points_door3, s.points_door4, s.points_door5, s.points_door6
+		FROM runs r
+		JOIN participants p ON r.competition_id = p.competition_id AND r.dossard = p.dossard_number
+		JOIN scales s ON r.competition_id = s.competition_id AND p.category = s.category AND r.zone = s.zone
+		WHERE r.competition_id = ? AND r.dossard = ?
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, competitionID, dossard)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var totalRuns, totalPoints, totalPenalty, totalChronoSec int32
+
+	for rows.Next() {
+		var competitionID, dossard, penality, chronoSec int32
+		var zone, category string
+		var door1, door2, door3, door4, door5, door6 bool
+		var pointsDoor1, pointsDoor2, pointsDoor3, pointsDoor4, pointsDoor5, pointsDoor6 int32
+
+		err := rows.Scan(
+			&competitionID, &dossard, &zone, &door1, &door2, &door3, &door4, &door5, &door6,
+			&penality, &chronoSec, &category,
+			&pointsDoor1, &pointsDoor2, &pointsDoor3, &pointsDoor4, &pointsDoor5, &pointsDoor6,
+		)
+		if err != nil {
+			return err
+		}
+
+		// Calculate points for this run
+		runPoints := int32(0)
+		if door1 {
+			runPoints += pointsDoor1
+		}
+		if door2 {
+			runPoints += pointsDoor2
+		}
+		if door3 {
+			runPoints += pointsDoor3
+		}
+		if door4 {
+			runPoints += pointsDoor4
+		}
+		if door5 {
+			runPoints += pointsDoor5
+		}
+		if door6 {
+			runPoints += pointsDoor6
+		}
+
+		totalRuns++
+		totalPoints += runPoints
+		totalPenalty += penality
+		totalChronoSec += chronoSec
+	}
+
+	if err = rows.Err(); err != nil {
+		return err
+	}
+
+	// If no runs found, delete the liveranking entry if it exists
+	if totalRuns == 0 {
+		deleteQuery := `DELETE FROM liverankings WHERE competition_id = ? AND dossard_number = ?`
+		_, err = r.db.ExecContext(ctx, deleteQuery, competitionID, dossard)
+		return err
+	}
+
+	// Check if liveranking exists
+	checkQuery := `
+		SELECT EXISTS(
+			SELECT 1 FROM liverankings 
+			WHERE competition_id = ? AND dossard_number = ?
+		)
+	`
+	var exists bool
+	err = r.db.QueryRowContext(ctx, checkQuery, competitionID, dossard).Scan(&exists)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		// Update existing liveranking with recalculated values
+		updateQuery := `
+			UPDATE liverankings
+			SET number_of_runs = ?, total_points = ?, penality = ?, chrono_sec = ?
+			WHERE competition_id = ? AND dossard_number = ?
+		`
+		_, err = r.db.ExecContext(ctx, updateQuery, totalRuns, totalPoints, totalPenalty, totalChronoSec, competitionID, dossard)
+		return err
+	}
+
+	// Insert new liveranking if it doesn't exist
+	insertQuery := `
+		INSERT INTO liverankings (competition_id, dossard_number, number_of_runs, total_points, penality, chrono_sec)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`
+	_, err = r.db.ExecContext(ctx, insertQuery, competitionID, dossard, totalRuns, totalPoints, totalPenalty, totalChronoSec)
+	return err
+}

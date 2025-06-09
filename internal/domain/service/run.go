@@ -23,9 +23,9 @@ type RunService interface {
 	// ListRunsByDossardWithDetails lists all runs for a participant with referee information
 	ListRunsByDossardWithDetails(ctx context.Context, competitionID int32, dossard int32) ([]*aggregate.Run, error)
 
-	// UpdateRun updates an existing run
+	// UpdateRun updates an existing run and recalculates liveranking
 	UpdateRun(ctx context.Context, run *aggregate.Run) error
 
-	// DeleteRun deletes a run
+	// DeleteRun deletes a run and recalculates liveranking
 	DeleteRun(ctx context.Context, competitionID, runNumber, dossard int32) error
 }

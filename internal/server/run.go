@@ -233,7 +233,7 @@ func (s *Server) getParticipantRuns(c *gin.Context) {
 
 // updateRun godoc
 // @Summary      Update a run
-// @Description  Updates an existing run (admin only)
+// @Description  Updates an existing run and recalculates liveranking (admin only)
 // @Tags         run
 // @Accept       json
 // @Produce      json
@@ -310,7 +310,7 @@ func (s *Server) updateRun(c *gin.Context) {
 
 // deleteRun godoc
 // @Summary      Delete a run
-// @Description  Deletes an existing run (admin only)
+// @Description  Deletes an existing run and recalculates liveranking (admin only)
 // @Tags         run
 // @Accept       json
 // @Produce      json
