@@ -65,7 +65,10 @@ func runRestServer(_ *cobra.Command, _ []string) {
 	}
 
 	log.Info().Msg("Initializing database ...")
-	repository.InitializeDatabase(db)
+	err = repository.InitializeDatabase(db)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to initialize database schema")
+	}
 
 	log.Info().Msg("Initializing repositories ...")
 	userRepo := repository.NewSQLUserRepository(db)
