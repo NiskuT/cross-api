@@ -3,6 +3,17 @@ definitions:
   gin.H:
     additionalProperties: true
     type: object
+  models.ChangePasswordInput:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        minLength: 8
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
   models.Competition:
     properties:
       contact:
@@ -94,6 +105,13 @@ definitions:
         type: integer
       message:
         type: string
+    type: object
+  models.ForgotPasswordInput:
+    properties:
+      email:
+        type: string
+    required:
+    - email
     type: object
   models.LiverankingListResponse:
     properties:
@@ -312,6 +330,76 @@ info:
   title: Orkys API
   version: "1.0"
 paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Generates a new password and sends it to the user's email address
+      parameters:
+      - description: Email for password reset
+        in: body
+        name: forgotPasswordRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.ForgotPasswordInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset email sent
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Reset forgotten password
+      tags:
+      - auth
+  /auth/password:
+    put:
+      consumes:
+      - application/json
+      description: Allows authenticated users to change their password by providing
+        current and new password
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Password change data
+        in: body
+        name: changePasswordRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChangePasswordInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed successfully
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid current password)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Change user password
+      tags:
+      - auth
   /competition:
     get:
       consumes:
