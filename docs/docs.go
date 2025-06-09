@@ -701,6 +701,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/competition/{competitionID}/participant/{dossard}/runs": {
+            "get": {
+                "description": "Retrieves all runs for a specific participant with referee and zone information (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "run"
+                ],
+                "summary": "Get all runs for a participant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Competition ID",
+                        "name": "competitionID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Participant dossard number",
+                        "name": "dossard",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns list of runs with details",
+                        "schema": {
+                            "$ref": "#/definitions/models.RunListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (admin access required)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/competition/{competitionID}/participants": {
             "get": {
                 "description": "Lists all participants for a competition filtered by category",
@@ -975,6 +1051,75 @@ const docTemplate = `{
             }
         },
         "/run": {
+            "put": {
+                "description": "Updates an existing run (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "run"
+                ],
+                "summary": "Update a run",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Run update data",
+                        "name": "run",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RunUpdateInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns updated run data",
+                        "schema": {
+                            "$ref": "#/definitions/models.RunResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (admin access required)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Run not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Creates a new run and updates the liveranking",
                 "consumes": [
@@ -1037,6 +1182,87 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "Deletes an existing run (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "run"
+                ],
+                "summary": "Delete a run",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authentication cookie",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Competition ID",
+                        "name": "competitionID",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Participant dossard number",
+                        "name": "dossard",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Run number",
+                        "name": "runNumber",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Run deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (admin access required)",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Run not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
             }
         }
     },
@@ -1056,8 +1282,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "new_password": {
-                    "type": "string",
-                    "minLength": 8
+                    "type": "string"
                 }
             }
         },
@@ -1386,6 +1611,53 @@ const docTemplate = `{
                 }
             }
         },
+        "models.RunDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "chrono_sec": {
+                    "type": "integer"
+                },
+                "competition_id": {
+                    "type": "integer"
+                },
+                "door1": {
+                    "type": "boolean"
+                },
+                "door2": {
+                    "type": "boolean"
+                },
+                "door3": {
+                    "type": "boolean"
+                },
+                "door4": {
+                    "type": "boolean"
+                },
+                "door5": {
+                    "type": "boolean"
+                },
+                "door6": {
+                    "type": "boolean"
+                },
+                "dossard": {
+                    "type": "integer"
+                },
+                "penality": {
+                    "type": "integer"
+                },
+                "referee_id": {
+                    "type": "integer"
+                },
+                "referee_name": {
+                    "type": "string"
+                },
+                "run_number": {
+                    "type": "integer"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
         "models.RunInput": {
             "type": "object",
             "required": [
@@ -1429,8 +1701,66 @@ const docTemplate = `{
                 }
             }
         },
+        "models.RunListResponse": {
+            "type": "object",
+            "properties": {
+                "runs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.RunDetailsResponse"
+                    }
+                }
+            }
+        },
         "models.RunResponse": {
             "type": "object",
+            "properties": {
+                "chrono_sec": {
+                    "type": "integer"
+                },
+                "competition_id": {
+                    "type": "integer"
+                },
+                "door1": {
+                    "type": "boolean"
+                },
+                "door2": {
+                    "type": "boolean"
+                },
+                "door3": {
+                    "type": "boolean"
+                },
+                "door4": {
+                    "type": "boolean"
+                },
+                "door5": {
+                    "type": "boolean"
+                },
+                "door6": {
+                    "type": "boolean"
+                },
+                "dossard": {
+                    "type": "integer"
+                },
+                "penality": {
+                    "type": "integer"
+                },
+                "run_number": {
+                    "type": "integer"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RunUpdateInput": {
+            "type": "object",
+            "required": [
+                "competition_id",
+                "dossard",
+                "run_number",
+                "zone"
+            ],
             "properties": {
                 "chrono_sec": {
                     "type": "integer"

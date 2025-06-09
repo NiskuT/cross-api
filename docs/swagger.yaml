@@ -8,7 +8,6 @@ definitions:
       current_password:
         type: string
       new_password:
-        minLength: 8
         type: string
     required:
     - current_password
@@ -232,6 +231,37 @@ definitions:
           type: string
         type: array
     type: object
+  models.RunDetailsResponse:
+    properties:
+      chrono_sec:
+        type: integer
+      competition_id:
+        type: integer
+      door1:
+        type: boolean
+      door2:
+        type: boolean
+      door3:
+        type: boolean
+      door4:
+        type: boolean
+      door5:
+        type: boolean
+      door6:
+        type: boolean
+      dossard:
+        type: integer
+      penality:
+        type: integer
+      referee_id:
+        type: integer
+      referee_name:
+        type: string
+      run_number:
+        type: integer
+      zone:
+        type: string
+    type: object
   models.RunInput:
     properties:
       chrono_sec:
@@ -261,6 +291,13 @@ definitions:
     - dossard
     - zone
     type: object
+  models.RunListResponse:
+    properties:
+      runs:
+        items:
+          $ref: '#/definitions/models.RunDetailsResponse'
+        type: array
+    type: object
   models.RunResponse:
     properties:
       chrono_sec:
@@ -287,6 +324,38 @@ definitions:
         type: integer
       zone:
         type: string
+    type: object
+  models.RunUpdateInput:
+    properties:
+      chrono_sec:
+        type: integer
+      competition_id:
+        type: integer
+      door1:
+        type: boolean
+      door2:
+        type: boolean
+      door3:
+        type: boolean
+      door4:
+        type: boolean
+      door5:
+        type: boolean
+      door6:
+        type: boolean
+      dossard:
+        type: integer
+      penality:
+        type: integer
+      run_number:
+        type: integer
+      zone:
+        type: string
+    required:
+    - competition_id
+    - dossard
+    - run_number
+    - zone
     type: object
   models.ZoneResponse:
     properties:
@@ -578,6 +647,58 @@ paths:
       summary: Get participant information
       tags:
       - participant
+  /competition/{competitionID}/participant/{dossard}/runs:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all runs for a specific participant with referee and
+        zone information (admin only)
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Competition ID
+        in: path
+        name: competitionID
+        required: true
+        type: integer
+      - description: Participant dossard number
+        in: path
+        name: dossard
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns list of runs with details
+          schema:
+            $ref: '#/definitions/models.RunListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden (admin access required)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get all runs for a participant
+      tags:
+      - run
   /competition/{competitionID}/participants:
     get:
       consumes:
@@ -968,6 +1089,61 @@ paths:
       tags:
       - participant
   /run:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an existing run (admin only)
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Competition ID
+        in: query
+        name: competitionID
+        required: true
+        type: integer
+      - description: Participant dossard number
+        in: query
+        name: dossard
+        required: true
+        type: integer
+      - description: Run number
+        in: query
+        name: runNumber
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Run deleted successfully
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden (admin access required)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Run not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Delete a run
+      tags:
+      - run
     post:
       consumes:
       - application/json
@@ -1008,6 +1184,52 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Create a new run
+      tags:
+      - run
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing run (admin only)
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Run update data
+        in: body
+        name: run
+        required: true
+        schema:
+          $ref: '#/definitions/models.RunUpdateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns updated run data
+          schema:
+            $ref: '#/definitions/models.RunResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden (admin access required)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Run not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Update a run
       tags:
       - run
 swagger: "2.0"
