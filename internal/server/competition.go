@@ -267,7 +267,13 @@ func (s *Server) addRefereeToCompetition(c *gin.Context) {
 		return
 	}
 
-	err := s.userService.InviteUser(c, refereeInput.FirstName, refereeInput.LastName, refereeInput.Email, refereeInput.CompetitionID)
+	competition, err := s.competitionService.GetCompetition(c, refereeInput.CompetitionID)
+	if err != nil {
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	err = s.userService.InviteUser(c, refereeInput.FirstName, refereeInput.LastName, refereeInput.Email, competition)
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, err)
 		return

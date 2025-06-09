@@ -328,3 +328,7 @@ func (s *CompetitionService) GetLiveranking(ctx context.Context, competitionID i
 
 	return s.liverankingRepo.ListLiverankingByCategoryAndGender(ctx, competitionID, category, gender, pageNumber, pageSize)
 }
+
+func (s *CompetitionService) GetCompetition(ctx context.Context, competitionID int32) (*aggregate.Competition, error) {
+	return s.competitionRepo.GetCompetition(ctx, competitionID)
+}

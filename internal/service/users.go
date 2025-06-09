@@ -26,6 +26,8 @@ var (
 	ErrEmailSendingFailed = errors.New("failed to send email")
 	// ErrMissingEmailConfig is returned when email configuration is missing
 	ErrMissingEmailConfig = errors.New("email configuration is missing")
+	// ErrMaximumRolesReached is returned when the user has reached the maximum number of roles
+	ErrMaximumRolesReached = errors.New("maximum number of roles reached, contact support")
 )
 
 type UserService struct {
@@ -213,7 +215,7 @@ func (s *UserService) sendEmail(to, subject, body string) error {
 }
 
 // AddUserToCompetition adds the referee role for a specific competition to a user
-func (s *UserService) AddUserToCompetition(ctx context.Context, email string, competitionID int32) error {
+func (s *UserService) AddUserToCompetition(ctx context.Context, email string, competition *aggregate.Competition) error {
 	// Get the user
 	user, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
@@ -221,9 +223,13 @@ func (s *UserService) AddUserToCompetition(ctx context.Context, email string, co
 	}
 
 	// Create the new role
-	newRole := fmt.Sprintf("referee:%d", competitionID)
+	newRole := fmt.Sprintf("referee:%d", competition.GetID())
 
 	user.AddRole(newRole)
+	if len(user.GetRoles()) >= 500 {
+		return ErrMaximumRolesReached
+	}
+
 	// Save the changes
 	err = s.userRepo.UpdateUser(ctx, user)
 	if err != nil {
@@ -231,19 +237,19 @@ func (s *UserService) AddUserToCompetition(ctx context.Context, email string, co
 	}
 
 	// Send notification email to existing user
-	subject := "Cross Competition - Nouvelle Invitation d'Arbitre"
+	subject := "Golene Evasion - Nouvelle Invitation d'Arbitre"
 	body := fmt.Sprintf(`
 		<html>
 		<body>
-			<h2>Nouvelle Invitation - Cross Competition</h2>
+			<h2>Nouvelle Invitation - Golene Evasion</h2>
 			<p>Cher/Chère %s %s,</p>
-			<p>Vous avez été invité(e) en tant qu'arbitre pour une nouvelle compétition (ID : %d).</p>
-			<p>Vous pouvez vous connecter avec vos identifiants existants sur notre plateforme.</p>
+			<p>Vous avez été invité(e) en tant qu'arbitre pour une nouvelle compétition : %s.</p>
+			<p>Vous pouvez vous connecter avec vos identifiants existants sur <a href="https://cross.golene-evasion.com">notre plateforme</a>.</p>
 			<p>Si vous avez oublié votre mot de passe, utilisez la fonction "Mot de passe oublié" sur la page de connexion.</p>
-			<p>Cordialement,<br>L'équipe Cross Competition</p>
+			<p>Cordialement,<br>L'équipe Golene Evasion</p>
 		</body>
 		</html>
-	`, user.GetFirstName(), user.GetLastName(), competitionID)
+	`, user.GetFirstName(), user.GetLastName(), competition.GetName())
 
 	err = s.sendEmail(email, subject, body)
 	if err != nil {
@@ -276,12 +282,12 @@ func (s *UserService) SetUserAsAdmin(ctx context.Context, email string, competit
 }
 
 // InviteUser creates a new user with a referee role for a specific competition and sends an invitation email
-func (s *UserService) InviteUser(ctx context.Context, firstName, lastName, email string, competitionID int32) error {
+func (s *UserService) InviteUser(ctx context.Context, firstName, lastName, email string, competition *aggregate.Competition) error {
 	// Check if the user already exists
 	existingUser, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err == nil && existingUser != nil {
 		// User already exists, just add the competition role
-		return s.AddUserToCompetition(ctx, email, competitionID)
+		return s.AddUserToCompetition(ctx, email, competition)
 	}
 
 	// Generate a random password
@@ -294,7 +300,7 @@ func (s *UserService) InviteUser(ctx context.Context, firstName, lastName, email
 	user.SetLastName(lastName)
 
 	// Set referee role for the specified competition
-	role := fmt.Sprintf("referee:%d", competitionID)
+	role := fmt.Sprintf("referee:%d", competition.GetID())
 	user.SetRoles(role)
 
 	// Hash the password
@@ -311,23 +317,23 @@ func (s *UserService) InviteUser(ctx context.Context, firstName, lastName, email
 	}
 
 	// Prepare and send the invitation email
-	subject := "Bienvenue à Cross Competition - Invitation d'Arbitre"
+	subject := "Bienvenue à Golene Evasion - Invitation d'Arbitre"
 	body := fmt.Sprintf(`
 		<html>
 		<body>
-			<h2>Bienvenue à Cross Competition !</h2>
+			<h2>Bienvenue à Golene Evasion !</h2>
 			<p>Cher/Chère %s %s,</p>
-			<p>Vous avez été invité(e) en tant qu'arbitre pour la compétition ID : %d.</p>
+			<p>Vous avez été invité(e) en tant qu'arbitre pour la compétition : %s.</p>
 			<p>Voici vos identifiants de connexion :</p>
 			<ul>
 				<li><strong>Email :</strong> %s</li>
 				<li><strong>Mot de passe :</strong> %s</li>
 			</ul>
-			<p>Veuillez vous connecter à notre plateforme et changer votre mot de passe après votre première connexion.</p>
-			<p>Cordialement,<br>L'équipe Cross Competition</p>
+			<p>Veuillez vous connecter à notre plateforme <a href="https://cross.golene-evasion.com">ici</a> et changer votre mot de passe après votre première connexion.</p>
+			<p>Cordialement,<br>L'équipe Golene Evasion</p>
 		</body>
 		</html>
-	`, firstName, lastName, competitionID, email, password)
+	`, firstName, lastName, competition.GetName(), email, password)
 
 	err = s.sendEmail(email, subject, body)
 	if err != nil {
@@ -398,16 +404,16 @@ func (s *UserService) ForgotPassword(ctx context.Context, email string) error {
 	}
 
 	// Send the new password by email
-	subject := "Cross Competition - Nouveau mot de passe"
+	subject := "Golene Evasion - Nouveau mot de passe"
 	body := fmt.Sprintf(`
 		<html>
 		<body>
-			<h2>Nouveau mot de passe - Cross Competition</h2>
+			<h2>Nouveau mot de passe - Golene Evasion</h2>
 			<p>Cher/Chère %s %s,</p>
 			<p>Votre demande de réinitialisation de mot de passe a été traitée.</p>
 			<p>Voici votre nouveau mot de passe : <strong>%s</strong></p>
 			<p>Nous vous recommandons de changer ce mot de passe après votre prochaine connexion.</p>
-			<p>Cordialement,<br>L'équipe Cross Competition</p>
+			<p>Cordialement,<br>L'équipe Golene Evasion</p>
 		</body>
 		</html>
 	`, user.GetFirstName(), user.GetLastName(), newPassword)

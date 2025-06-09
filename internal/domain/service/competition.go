@@ -13,6 +13,7 @@ type CompetitionService interface {
 	AddParticipants(ctx context.Context, competitionID int32, file io.Reader, filename string) error
 	CreateParticipant(ctx context.Context, participant *aggregate.Participant) error
 	ListCompetitions(ctx context.Context) ([]*aggregate.Competition, error)
+	GetCompetition(ctx context.Context, competitionID int32) (*aggregate.Competition, error)
 	GetParticipant(ctx context.Context, competitionID int32, dossardNumber int32) (*aggregate.Participant, error)
 	ListParticipantsByCategory(ctx context.Context, competitionID int32, category string) ([]*aggregate.Participant, error)
 	ListZones(ctx context.Context, competitionID int32) ([]aggregate.ZoneInfo, error)
