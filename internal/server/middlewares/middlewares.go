@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -56,6 +57,16 @@ func handleExpiredToken(c *gin.Context, userService service.UserService) (bool, 
 
 	c.SetCookie(AccessToken, tokens.GetAccessToken(), 0, "/", "", SecureMode, true)
 	c.SetCookie(RefreshToken, tokens.GetRefreshToken(), 0, "/", "", SecureMode, true)
+
+	// Add headers when tokens are refreshed
+	c.Header("x-token-refreshed", "true")
+	if roles := tokens.GetRoles(); len(roles) > 0 {
+		rolesJSON, err := json.Marshal(roles)
+		if err != nil {
+			return false, errors.New("failed to marshal roles to JSON")
+		}
+		c.Header("x-user-roles", string(rolesJSON))
+	}
 
 	return true, nil
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -65,8 +66,19 @@ func (s *Server) createCompetition(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(AccessToken, newToken.GetAccessToken(), 0, "/", "", middlewares.SecureMode, true)
-	c.SetCookie(RefreshToken, newToken.GetRefreshToken(), 0, "/", "", middlewares.SecureMode, true)
+	c.SetCookie(middlewares.AccessToken, newToken.GetAccessToken(), 0, "/", "", middlewares.SecureMode, true)
+	c.SetCookie(middlewares.RefreshToken, newToken.GetRefreshToken(), 0, "/", "", middlewares.SecureMode, true)
+
+	// Add headers when tokens are set
+	c.Header("x-token-refreshed", "true")
+	if roles := newToken.GetRoles(); len(roles) > 0 {
+		rolesJSON, err := json.Marshal(roles)
+		if err != nil {
+			RespondError(c, http.StatusInternalServerError, err)
+			return
+		}
+		c.Header("x-user-roles", string(rolesJSON))
+	}
 
 	res := models.CompetitionResponse{
 		ID:          competitionID,

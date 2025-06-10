@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -14,11 +15,6 @@ var (
 	ErrMissingAuthorizationHeader = errors.New("missing authorization header")
 	ErrInvalidPage                = errors.New("invalid page parameter")
 	ErrInvalidLimit               = errors.New("invalid limit parameter")
-)
-
-const (
-	AccessToken  = "access_token"
-	RefreshToken = "refresh_token"
 )
 
 // login godoc
@@ -55,8 +51,19 @@ func (s *Server) login(c *gin.Context) {
 	clientIP := s.rateLimiter.GetClientIP(c)
 	s.rateLimiter.ResetAttempts("login", clientIP)
 
-	c.SetCookie(AccessToken, user.GetAccessToken(), 0, "/", "", middlewares.SecureMode, true)
-	c.SetCookie(RefreshToken, user.GetRefreshToken(), 0, "/", "", middlewares.SecureMode, true)
+	c.SetCookie(middlewares.AccessToken, user.GetAccessToken(), 0, "/", "", middlewares.SecureMode, true)
+	c.SetCookie(middlewares.RefreshToken, user.GetRefreshToken(), 0, "/", "", middlewares.SecureMode, true)
+
+	// Add headers when tokens are set
+	c.Header("x-token-refreshed", "true")
+	if roles := user.GetRoles(); len(roles) > 0 {
+		rolesJSON, err := json.Marshal(roles)
+		if err != nil {
+			RespondError(c, http.StatusInternalServerError, err)
+			return
+		}
+		c.Header("x-user-roles", string(rolesJSON))
+	}
 
 	c.JSON(http.StatusOK, models.RoleResponse{
 		Roles: user.GetRoles(),
@@ -73,10 +80,10 @@ func (s *Server) login(c *gin.Context) {
 // @Router       /logout [post]
 func (s *Server) logout(c *gin.Context) {
 	// Clear the access token cookie
-	c.SetCookie(AccessToken, "", -1, "/", "", middlewares.SecureMode, true)
+	c.SetCookie(middlewares.AccessToken, "", -1, "/", "", middlewares.SecureMode, true)
 
 	// Clear the refresh token cookie
-	c.SetCookie(RefreshToken, "", -1, "/", "", middlewares.SecureMode, true)
+	c.SetCookie(middlewares.RefreshToken, "", -1, "/", "", middlewares.SecureMode, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Successfully logged out",
