@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -154,9 +153,9 @@ func (s *Server) addZoneToCompetition(c *gin.Context) {
 		return
 	}
 
-	role := fmt.Sprintf("admin:%d", competitionScaleInput.CompetitionID)
-	if !middlewares.HasRole(c, role) {
-		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+	err := checkHasAdminAccessToCompetition(c, competitionScaleInput.CompetitionID)
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
 		return
 	}
 
@@ -171,7 +170,7 @@ func (s *Server) addZoneToCompetition(c *gin.Context) {
 	scale.SetPointsDoor5(competitionScaleInput.PointsDoor5)
 	scale.SetPointsDoor6(competitionScaleInput.PointsDoor6)
 
-	err := s.competitionService.AddScale(c, competitionScaleInput.CompetitionID, scale)
+	err = s.competitionService.AddScale(c, competitionScaleInput.CompetitionID, scale)
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, err)
 		return
@@ -208,9 +207,9 @@ func (s *Server) addParticipantsToCompetition(c *gin.Context) {
 	}
 	competitionID := int32(competitionIDInt)
 
-	role := fmt.Sprintf("admin:%d", competitionID)
-	if !middlewares.HasRole(c, role) {
-		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+	err = checkHasAdminAccessToCompetition(c, competitionID)
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
 		return
 	}
 
@@ -273,9 +272,9 @@ func (s *Server) addRefereeToCompetition(c *gin.Context) {
 		return
 	}
 
-	role := fmt.Sprintf("admin:%d", refereeInput.CompetitionID)
-	if !middlewares.HasRole(c, role) {
-		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+	err := checkHasAdminAccessToCompetition(c, refereeInput.CompetitionID)
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
 		return
 	}
 
@@ -388,9 +387,9 @@ func (s *Server) updateZoneInCompetition(c *gin.Context) {
 		return
 	}
 
-	role := fmt.Sprintf("admin:%d", competitionScaleInput.CompetitionID)
-	if !middlewares.HasRole(c, role) {
-		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+	err := checkHasAdminAccessToCompetition(c, competitionScaleInput.CompetitionID)
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
 		return
 	}
 
@@ -405,7 +404,7 @@ func (s *Server) updateZoneInCompetition(c *gin.Context) {
 	scale.SetPointsDoor5(competitionScaleInput.PointsDoor5)
 	scale.SetPointsDoor6(competitionScaleInput.PointsDoor6)
 
-	err := s.competitionService.UpdateScale(c, competitionScaleInput.CompetitionID, scale)
+	err = s.competitionService.UpdateScale(c, competitionScaleInput.CompetitionID, scale)
 	if err != nil {
 		if errors.Is(err, repository.ErrScaleNotFound) {
 			RespondError(c, http.StatusNotFound, errors.New("zone not found"))
@@ -454,13 +453,13 @@ func (s *Server) deleteZoneFromCompetition(c *gin.Context) {
 		return
 	}
 
-	role := fmt.Sprintf("admin:%d", zoneDeleteInput.CompetitionID)
-	if !middlewares.HasRole(c, role) {
-		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+	err := checkHasAdminAccessToCompetition(c, zoneDeleteInput.CompetitionID)
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
 		return
 	}
 
-	err := s.competitionService.DeleteScale(c, zoneDeleteInput.CompetitionID, zoneDeleteInput.Category, zoneDeleteInput.Zone)
+	err = s.competitionService.DeleteScale(c, zoneDeleteInput.CompetitionID, zoneDeleteInput.Category, zoneDeleteInput.Zone)
 	if err != nil {
 		if errors.Is(err, repository.ErrScaleNotFound) {
 			RespondError(c, http.StatusNotFound, errors.New("zone not found"))
@@ -583,9 +582,9 @@ func (s *Server) createParticipant(c *gin.Context) {
 	}
 
 	// Check if user has access to the competition
-	role := fmt.Sprintf("admin:%d", participantInput.CompetitionID)
-	if !middlewares.HasRole(c, role) {
-		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+	err := checkHasAdminAccessToCompetition(c, participantInput.CompetitionID)
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
 		return
 	}
 
@@ -599,7 +598,7 @@ func (s *Server) createParticipant(c *gin.Context) {
 	participant.SetGender(participantInput.Gender)
 
 	// Create participant through service
-	err := s.competitionService.CreateParticipant(c, participant)
+	err = s.competitionService.CreateParticipant(c, participant)
 	if err != nil {
 		// Check for duplicate participant error (need to check the error message since it's in different package)
 		if errors.Is(err, repository.ErrCompetitionNotFound) {
@@ -660,10 +659,9 @@ func (s *Server) listParticipantsByCategory(c *gin.Context) {
 	}
 
 	// Check if user has access to the competition
-	hasRole := middlewares.HasRole(c, fmt.Sprintf("admin:%d", competitionID)) ||
-		middlewares.HasRole(c, fmt.Sprintf("referee:%d", competitionID))
-	if !hasRole {
-		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+	err = checkHasAccessToCompetition(c, int32(competitionID))
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
 		return
 	}
 

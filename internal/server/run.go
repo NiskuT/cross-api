@@ -2,7 +2,6 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -46,10 +45,9 @@ func (s *Server) getParticipant(c *gin.Context) {
 	}
 
 	// Check if user has access to the competition
-	hasRole := middlewares.HasRole(c, fmt.Sprintf("admin:%d", competitionID)) ||
-		middlewares.HasRole(c, fmt.Sprintf("referee:%d", competitionID))
-	if !hasRole {
-		RespondError(c, http.StatusUnauthorized, ErrUnauthorized)
+	err = checkHasAccessToCompetition(c, int32(competitionID))
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
 		return
 	}
 
