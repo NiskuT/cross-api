@@ -77,23 +77,26 @@ func (u *User) SetRoles(roles string) {
 }
 
 func (u *User) AddRole(newRole string) {
-	// Check if the user already has this role
+	// Split existing roles and trim spaces
 	roles := strings.Split(u.GetRoles(), ",")
+	trimmedRoles := make([]string, 0, len(roles))
 	for _, role := range roles {
-		if strings.TrimSpace(role) == newRole {
-			// User already has this role
-			return
+		if trimmed := strings.TrimSpace(role); trimmed != "" {
+			trimmedRoles = append(trimmedRoles, trimmed)
+		}
+	}
+
+	// Check for duplicate role
+	for _, role := range trimmedRoles {
+		if role == newRole {
+			return // Role already exists
 		}
 	}
 
 	// Add the new role
-	var updatedRoles string
-	if u.GetRoles() == "" {
-		updatedRoles = newRole
+	if len(trimmedRoles) == 0 {
+		u.SetRoles(newRole)
 	} else {
-		updatedRoles = u.GetRoles() + "," + newRole
+		u.SetRoles(strings.Join(trimmedRoles, ",") + "," + newRole)
 	}
-
-	// Update the user
-	u.SetRoles(updatedRoles)
 }

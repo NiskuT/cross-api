@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/NiskuT/cross-api/internal/domain/aggregate"
 	"github.com/NiskuT/cross-api/internal/domain/models"
@@ -325,14 +324,11 @@ func (s *Server) generateRefereeInvitationLink(c *gin.Context) {
 	}
 
 	// Generate invitation token
-	token, err := s.userService.GenerateRefereeInvitationToken(c, int32(competitionID))
+	token, expiresAt, err := s.userService.GenerateRefereeInvitationToken(c, int32(competitionID))
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, err)
 		return
 	}
-
-	// Calculate expiration time (7 days from now)
-	expiresAt := time.Now().Add(time.Hour * 24 * 7).Format(time.RFC3339)
 
 	response := models.RefereeInvitationResponse{
 		Token:     token,

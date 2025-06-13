@@ -427,22 +427,22 @@ func (s *UserService) ForgotPassword(ctx context.Context, email string) error {
 }
 
 // GenerateRefereeInvitationToken creates a special JWT token for referee invitations
-func (s *UserService) GenerateRefereeInvitationToken(ctx context.Context, competitionID int32) (string, error) {
-	// Create invitation token with 7 days expiration
+func (s *UserService) GenerateRefereeInvitationToken(ctx context.Context, competitionID int32) (string, int64, error) {
+	expiresAt := time.Now().Add(time.Minute * 15).Unix()
 	invitationClaims := jwt.MapClaims{
 		"competition_id": competitionID,
 		"type":           "referee_invitation",
 		"iss":            "golene-evasion.com",
-		"exp":            time.Now().Add(time.Minute * 5).Unix(), // 5 minutes
+		"exp":            expiresAt,
 	}
 
 	invitationToken := jwt.NewWithClaims(jwt.SigningMethodHS256, invitationClaims)
 	tokenString, err := invitationToken.SignedString([]byte(s.cfg.Jwt.SecretKey))
 	if err != nil {
-		return "", fmt.Errorf("failed to generate invitation token: %w", err)
+		return "", 0, fmt.Errorf("failed to generate invitation token: %w", err)
 	}
 
-	return tokenString, nil
+	return tokenString, expiresAt, nil
 }
 
 // Helper function to verify and extract competition ID from referee invitation token

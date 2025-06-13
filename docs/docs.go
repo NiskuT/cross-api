@@ -1817,7 +1817,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "expires_at": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "token": {
                     "type": "string"
