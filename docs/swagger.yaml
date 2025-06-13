@@ -224,6 +224,40 @@ definitions:
     - first_name
     - last_name
     type: object
+  models.RefereeInvitationAcceptInput:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
+  models.RefereeInvitationAcceptUnauthenticatedInput:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      token:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - token
+    type: object
+  models.RefereeInvitationResponse:
+    properties:
+      expires_at:
+        type: string
+      invitation_link:
+        type: string
+    type: object
   models.RoleResponse:
     properties:
       roles:
@@ -746,6 +780,52 @@ paths:
       summary: List participants by category
       tags:
       - participant
+  /competition/{competitionID}/referee/invitation:
+    get:
+      consumes:
+      - application/json
+      description: Generates an invitation link for a referee to join a competition
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Competition ID
+        in: path
+        name: competitionID
+        required: true
+        type: integer
+      - description: Base URL for the invitation link
+        in: query
+        name: baseURL
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns invitation link and token
+          schema:
+            $ref: '#/definitions/models.RefereeInvitationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden (admin access required)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Generate referee invitation link
+      tags:
+      - competition
   /competition/{competitionID}/zones:
     get:
       consumes:
@@ -1088,11 +1168,85 @@ paths:
       summary: Create a participant
       tags:
       - participant
+  /referee/invitation/accept:
+    post:
+      consumes:
+      - application/json
+      description: Accepts a referee invitation and adds the user to the competition
+      parameters:
+      - description: Authentication cookie
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      - description: Invitation token
+        in: body
+        name: invitation
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefereeInvitationAcceptInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully accepted invitation
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized (invalid credentials)
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Accept referee invitation
+      tags:
+      - competition
+  /referee/invitation/accept-unauthenticated:
+    post:
+      consumes:
+      - application/json
+      description: Accepts a referee invitation for unauthenticated users, creating
+        account if needed
+      parameters:
+      - description: Invitation data with user details
+        in: body
+        name: invitation
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefereeInvitationAcceptUnauthenticatedInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully accepted invitation and logged in
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Accept referee invitation (unauthenticated)
+      tags:
+      - competition
   /run:
     delete:
       consumes:
       - application/json
-      description: Deletes an existing run (admin only)
+      description: Deletes an existing run and recalculates liveranking (admin only)
       parameters:
       - description: Authentication cookie
         in: header
@@ -1189,7 +1343,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Updates an existing run (admin only)
+      description: Updates an existing run and recalculates liveranking (admin only)
       parameters:
       - description: Authentication cookie
         in: header

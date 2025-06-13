@@ -425,3 +425,157 @@ func (s *UserService) ForgotPassword(ctx context.Context, email string) error {
 
 	return nil
 }
+
+// GenerateRefereeInvitationToken creates a special JWT token for referee invitations
+func (s *UserService) GenerateRefereeInvitationToken(ctx context.Context, competitionID int32) (string, error) {
+	// Create invitation token with 7 days expiration
+	invitationClaims := jwt.MapClaims{
+		"competition_id": competitionID,
+		"type":           "referee_invitation",
+		"iss":            "golene-evasion.com",
+		"exp":            time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
+	}
+
+	invitationToken := jwt.NewWithClaims(jwt.SigningMethodHS256, invitationClaims)
+	tokenString, err := invitationToken.SignedString([]byte(s.cfg.Jwt.SecretKey))
+	if err != nil {
+		return "", fmt.Errorf("failed to generate invitation token: %w", err)
+	}
+
+	return tokenString, nil
+}
+
+// Helper function to verify and extract competition ID from referee invitation token
+func (s *UserService) verifyRefereeInvitationToken(token string) (int32, error) {
+	// Parse the invitation token
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		// Validate the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, ErrInvalidToken
+		}
+		return []byte(s.cfg.Jwt.SecretKey), nil
+	})
+
+	if err != nil || !parsedToken.Valid {
+		return 0, ErrInvalidToken
+	}
+
+	// Extract claims
+	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, ErrInvalidToken
+	}
+
+	// Verify token type
+	if tokenType, ok := claims["type"].(string); !ok || tokenType != "referee_invitation" {
+		return 0, ErrInvalidToken
+	}
+
+	// Verify issuer
+	if !claims.VerifyIssuer("golene-evasion.com", true) {
+		return 0, ErrInvalidToken
+	}
+
+	// Extract competition ID
+	var competitionID int32
+	if id, ok := claims["competition_id"].(float64); ok {
+		competitionID = int32(id)
+	} else {
+		return 0, ErrInvalidToken
+	}
+
+	return competitionID, nil
+}
+
+// AcceptRefereeInvitation processes a referee invitation token and adds the user to the competition
+func (s *UserService) AcceptRefereeInvitation(ctx context.Context, token string, userEmail string) (*aggregate.JwtToken, error) {
+	// Verify token and extract competition ID
+	competitionID, err := s.verifyRefereeInvitationToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the user by email
+	user, err := s.userRepo.GetUserByEmail(ctx, userEmail)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	// Add referee role for the competition
+	newRole := fmt.Sprintf("referee:%d", competitionID)
+	user.AddRole(newRole)
+
+	if len(user.GetRoles()) >= 500 {
+		return nil, ErrMaximumRolesReached
+	}
+
+	// Save the changes
+	err = s.userRepo.UpdateUser(ctx, user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add referee role: %w", err)
+	}
+
+	// Generate new tokens for the user
+	return s.generateTokens(user)
+}
+
+// AcceptRefereeInvitationUnauthenticated processes a referee invitation for unauthenticated users
+func (s *UserService) AcceptRefereeInvitationUnauthenticated(ctx context.Context, token, firstName, lastName, email, password string) (*aggregate.JwtToken, error) {
+	// Verify token and extract competition ID
+	competitionID, err := s.verifyRefereeInvitationToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if user already exists
+	existingUser, err := s.userRepo.GetUserByEmail(ctx, email)
+	if err == nil && existingUser != nil {
+		// User exists, verify password
+		if err := bcrypt.CompareHashAndPassword([]byte(existingUser.GetPasswordHash()), []byte(password)); err != nil {
+			return nil, ErrInvalidCredentials
+		}
+
+		// Add referee role for the competition
+		newRole := fmt.Sprintf("referee:%d", competitionID)
+		existingUser.AddRole(newRole)
+
+		if len(existingUser.GetRoles()) >= 500 {
+			return nil, ErrMaximumRolesReached
+		}
+
+		// Save the changes
+		err = s.userRepo.UpdateUser(ctx, existingUser)
+		if err != nil {
+			return nil, fmt.Errorf("failed to add referee role: %w", err)
+		}
+
+		// Generate tokens for existing user
+		return s.generateTokens(existingUser)
+	}
+
+	// User doesn't exist, create new user
+	user := aggregate.NewUser()
+	user.SetEmail(email)
+	user.SetFirstName(firstName)
+	user.SetLastName(lastName)
+
+	// Set referee role for the specified competition
+	role := fmt.Sprintf("referee:%d", competitionID)
+	user.SetRoles(role)
+
+	// Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %w", err)
+	}
+	user.SetPasswordHash(string(hashedPassword))
+
+	// Save the user to the database
+	err = s.userRepo.CreateUser(ctx, user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	// Generate tokens for new user
+	return s.generateTokens(user)
+}

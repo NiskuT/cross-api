@@ -3,14 +3,17 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/NiskuT/cross-api/internal/domain/aggregate"
 	"github.com/NiskuT/cross-api/internal/domain/models"
 	"github.com/NiskuT/cross-api/internal/repository"
 	"github.com/NiskuT/cross-api/internal/server/middlewares"
+	"github.com/NiskuT/cross-api/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -291,6 +294,172 @@ func (s *Server) addRefereeToCompetition(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Referee added to competition"})
+}
+
+// generateRefereeInvitation godoc
+// @Summary      Generate referee invitation link
+// @Description  Generates an invitation link for a referee to join a competition
+// @Tags         competition
+// @Accept       json
+// @Produce      json
+// @Param        Cookie        header    string  true   "Authentication cookie"
+// @Param        competitionID path      int     true   "Competition ID"
+// @Param        baseURL       query     string  false  "Base URL for the invitation link"
+// @Success      200           {object}  models.RefereeInvitationResponse  "Returns invitation link and token"
+// @Failure      400           {object}  models.ErrorResponse              "Bad Request"
+// @Failure      401           {object}  models.ErrorResponse              "Unauthorized (invalid credentials)"
+// @Failure      403           {object}  models.ErrorResponse              "Forbidden (admin access required)"
+// @Failure      500           {object}  models.ErrorResponse              "Internal Server Error"
+// @Router       /competition/{competitionID}/referee/invitation [get]
+func (s *Server) generateRefereeInvitationLink(c *gin.Context) {
+	competitionIDStr := c.Param("competitionID")
+	competitionID, err := strconv.ParseInt(competitionIDStr, 10, 32)
+	if err != nil {
+		RespondError(c, http.StatusBadRequest, errors.New("invalid competition ID"))
+		return
+	}
+
+	// Check if user has admin access to the competition
+	err = checkHasAdminAccessToCompetition(c, int32(competitionID))
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
+		return
+	}
+
+	// Generate invitation token
+	token, err := s.userService.GenerateRefereeInvitationToken(c, int32(competitionID))
+	if err != nil {
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Get base URL from query parameter or use default
+	baseURL := c.Query("baseURL")
+
+	invitationLink := fmt.Sprintf("%s/referee/invitation?token=%s", baseURL, token)
+
+	// Calculate expiration time (7 days from now)
+	expiresAt := time.Now().Add(time.Hour * 24 * 7).Format(time.RFC3339)
+
+	response := models.RefereeInvitationResponse{
+		InvitationLink: invitationLink,
+		ExpiresAt:      expiresAt,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// acceptRefereeInvitation godoc
+// @Summary      Accept referee invitation
+// @Description  Accepts a referee invitation and adds the user to the competition
+// @Tags         competition
+// @Accept       json
+// @Produce      json
+// @Param        Cookie     header    string                                true  "Authentication cookie"
+// @Param        invitation body      models.RefereeInvitationAcceptInput   true  "Invitation token"
+// @Success      200        {object}  gin.H                                 "Successfully accepted invitation"
+// @Failure      400        {object}  models.ErrorResponse                  "Bad Request"
+// @Failure      401        {object}  models.ErrorResponse                  "Unauthorized (invalid credentials)"
+// @Failure      500        {object}  models.ErrorResponse                  "Internal Server Error"
+// @Router       /referee/invitation/accept [post]
+func (s *Server) acceptRefereeInvitation(c *gin.Context) {
+	var invitationInput models.RefereeInvitationAcceptInput
+	if err := c.ShouldBindJSON(&invitationInput); err != nil {
+		RespondError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	// Get current user from context
+	user, err := middlewares.GetUser(c)
+	if err != nil {
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Accept the invitation
+	tokens, err := s.userService.AcceptRefereeInvitation(c, invitationInput.Token, user.Email)
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid") || strings.Contains(err.Error(), "expired") {
+			RespondError(c, http.StatusBadRequest, errors.New("invalid or expired invitation token"))
+		} else {
+			RespondError(c, http.StatusInternalServerError, err)
+		}
+		return
+	}
+
+	// Set new tokens in cookies
+	c.SetCookie(middlewares.AccessToken, tokens.GetAccessToken(), 0, "/", "", middlewares.SecureMode, true)
+	c.SetCookie(middlewares.RefreshToken, tokens.GetRefreshToken(), 0, "/", "", middlewares.SecureMode, true)
+
+	// Add headers when tokens are set
+	c.Header("x-token-refreshed", "true")
+	if roles := tokens.GetRoles(); len(roles) > 0 {
+		rolesJSON, err := json.Marshal(roles)
+		if err != nil {
+			RespondError(c, http.StatusInternalServerError, err)
+			return
+		}
+		c.Header("x-user-roles", string(rolesJSON))
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Referee invitation accepted successfully"})
+}
+
+// acceptRefereeInvitationUnauthenticated godoc
+// @Summary      Accept referee invitation (unauthenticated)
+// @Description  Accepts a referee invitation for unauthenticated users, creating account if needed
+// @Tags         competition
+// @Accept       json
+// @Produce      json
+// @Param        invitation body      models.RefereeInvitationAcceptUnauthenticatedInput   true  "Invitation data with user details"
+// @Success      200        {object}  gin.H                                                "Successfully accepted invitation and logged in"
+// @Failure      400        {object}  models.ErrorResponse                                 "Bad Request"
+// @Failure      401        {object}  models.ErrorResponse                                 "Invalid credentials"
+// @Failure      500        {object}  models.ErrorResponse                                 "Internal Server Error"
+// @Router       /referee/invitation/accept-unauthenticated [post]
+func (s *Server) acceptRefereeInvitationUnauthenticated(c *gin.Context) {
+	var invitationInput models.RefereeInvitationAcceptUnauthenticatedInput
+	if err := c.ShouldBindJSON(&invitationInput); err != nil {
+		RespondError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	// Accept the invitation
+	tokens, err := s.userService.AcceptRefereeInvitationUnauthenticated(
+		c,
+		invitationInput.Token,
+		invitationInput.FirstName,
+		invitationInput.LastName,
+		invitationInput.Email,
+		invitationInput.Password,
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid") || strings.Contains(err.Error(), "expired") {
+			RespondError(c, http.StatusBadRequest, errors.New("invalid or expired invitation token"))
+		} else if err == service.ErrInvalidCredentials {
+			RespondError(c, http.StatusUnauthorized, errors.New("invalid email or password"))
+		} else {
+			RespondError(c, http.StatusInternalServerError, err)
+		}
+		return
+	}
+
+	// Set tokens in cookies
+	c.SetCookie(middlewares.AccessToken, tokens.GetAccessToken(), 0, "/", "", middlewares.SecureMode, true)
+	c.SetCookie(middlewares.RefreshToken, tokens.GetRefreshToken(), 0, "/", "", middlewares.SecureMode, true)
+
+	// Add headers when tokens are set
+	c.Header("x-token-refreshed", "true")
+	if roles := tokens.GetRoles(); len(roles) > 0 {
+		rolesJSON, err := json.Marshal(roles)
+		if err != nil {
+			RespondError(c, http.StatusInternalServerError, err)
+			return
+		}
+		c.Header("x-user-roles", string(rolesJSON))
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Referee invitation accepted successfully"})
 }
 
 // listZones godoc

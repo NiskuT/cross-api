@@ -50,6 +50,26 @@ type RefereeInput struct {
 	Email         string `json:"email" binding:"required,email"`
 }
 
+// RefereeInvitationResponse represents the response for generating a referee invitation link
+type RefereeInvitationResponse struct {
+	InvitationLink string `json:"invitation_link"`
+	ExpiresAt      string `json:"expires_at"`
+}
+
+// RefereeInvitationAcceptInput represents the input for accepting a referee invitation
+type RefereeInvitationAcceptInput struct {
+	Token string `json:"token" binding:"required"`
+}
+
+// RefereeInvitationAcceptUnauthenticatedInput represents the input for accepting a referee invitation without authentication
+type RefereeInvitationAcceptUnauthenticatedInput struct {
+	Token     string `json:"token" binding:"required"`
+	FirstName string `json:"first_name" binding:"required"`
+	LastName  string `json:"last_name" binding:"required"`
+	Email     string `json:"email" binding:"required,email"`
+	Password  string `json:"password" binding:"required,min=6"`
+}
+
 // ZoneResponse represents a single zone in a competition
 type ZoneResponse struct {
 	Zone        string `json:"zone"`

@@ -119,6 +119,9 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 	router.POST("/logout", s.logout)
 	router.POST("/auth/forgot-password", s.rateLimiter.Limit("forgot-password"), s.forgotPassword)
 
+	// Unauthenticated referee invitation acceptance
+	router.POST("/referee/invitation/accept-unauthenticated", s.acceptRefereeInvitationUnauthenticated)
+
 	router.Use(middlewares.Authentication(cfg.Jwt.SecretKey, s.userService))
 
 	router.PUT("/auth/password", s.changePassword)
@@ -129,6 +132,8 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 	router.DELETE("/competition/zone", s.deleteZoneFromCompetition)
 	router.POST("/competition/participants", s.addParticipantsToCompetition)
 	router.POST("/competition/referee", s.addRefereeToCompetition)
+	router.GET("/competition/:competitionID/referee/invitation", s.generateRefereeInvitationLink)
+	router.POST("/referee/invitation/accept", s.acceptRefereeInvitation)
 	router.GET("/competition/:competitionID/participant/:dossard", s.getParticipant)
 	router.GET("/competition/:competitionID/participants", s.listParticipantsByCategory)
 	router.GET("/competition/:competitionID/participant/:dossard/runs", s.getParticipantRuns)

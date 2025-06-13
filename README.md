@@ -82,26 +82,29 @@ The API is pre-configured to work with OVH SSL Gateway:
 - `POST /auth/forgot-password` - Reset forgotten password (rate limited)
 
 ### Competition Management
-- `POST /competition` - Create competition
+- `POST /competition` - Create a new competition (admin only)
 - `GET /competition` - List competitions
-- `POST /competition/zone` - Add zone to competition
-- `PUT /competition/zone` - Update zone in competition
-- `DELETE /competition/zone` - Delete zone from competition
+- `POST /competition/zone` - Add a zone to a competition (admin only)
+- `PUT /competition/zone` - Update a zone in a competition (admin only)
+- `DELETE /competition/zone` - Delete a zone from a competition (admin only)
+- `POST /competition/participants` - Add participants from CSV/Excel file (admin only)
+- `POST /competition/referee` - Add a referee to a competition (admin only)
+- `GET /competition/{competitionID}/referee/invitation` - Generate referee invitation link (admin only)
+- `POST /referee/invitation/accept` - Accept referee invitation (authenticated user)
+- `POST /referee/invitation/accept-unauthenticated` - Accept referee invitation (unauthenticated, creates account if needed)
+- `GET /competition/{competitionID}/zones` - List zones for a competition
+- `GET /competition/{competitionID}/liveranking` - Get live ranking with pagination
+- `GET /competition/{competitionID}/participants` - List participants by category
+- `GET /competition/{competitionID}/participant/{dossard}` - Get participant details
 
 ### Participants
-- `POST /competition/participants` - Add participants (bulk CSV/Excel upload)
 - `POST /participant` - Create single participant
-- `GET /competition/{id}/participants` - List participants by category
-- `GET /competition/{id}/participant/{dossard}` - Get specific participant
 
-### Live Results
-- `POST /run` - Record a run result
-- `GET /competition/{id}/liveranking` - Get live rankings
-
-### Run Management (Admin Only)
-- `GET /competition/{competitionID}/participant/{dossard}/runs` - Get all runs for a participant with referee details
-- `PUT /run` - Update an existing run
-- `DELETE /run` - Delete a run
+### Run Management
+- `POST /run` - Record a run result (referee/admin)
+- `PUT /run` - Update an existing run (admin only)
+- `DELETE /run` - Delete a run (admin only)
+- `GET /competition/{competitionID}/participant/{dossard}/runs` - Get all runs for a participant with referee details (admin only)
 
 ## Security Features
 
@@ -138,7 +141,7 @@ Visit `/swagger/index.html` when the server is running to access the interactive
 ### Install required packages
 
 ```bash
-sudo apt  install golang-go
+sudo apt install golang-go
 go install github.com/swaggo/swag/cmd/swag@latest
 ```
 
@@ -157,4 +160,3 @@ Run `make start`
 ### Access the documentation
 
 Follow [this link](http://localhost:9000/swagger/index.html)
-

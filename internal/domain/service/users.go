@@ -14,4 +14,7 @@ type UserService interface {
 	SetUserAsAdmin(ctx context.Context, email string, competitionID int32) (*aggregate.JwtToken, error)
 	ChangePassword(ctx context.Context, userID int32, currentPassword, newPassword string) error
 	ForgotPassword(ctx context.Context, email string) error
+	GenerateRefereeInvitationToken(ctx context.Context, competitionID int32) (string, error)
+	AcceptRefereeInvitation(ctx context.Context, token string, userEmail string) (*aggregate.JwtToken, error)
+	AcceptRefereeInvitationUnauthenticated(ctx context.Context, token, firstName, lastName, email, password string) (*aggregate.JwtToken, error)
 }
