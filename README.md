@@ -89,7 +89,7 @@ The API is pre-configured to work with OVH SSL Gateway:
 - `DELETE /competition/zone` - Delete a zone from a competition (admin only)
 - `POST /competition/participants` - Add participants from CSV/Excel file (admin only)
 - `POST /competition/referee` - Add a referee to a competition (admin only)
-- `GET /competition/{competitionID}/referee/invitation` - Generate referee invitation link (admin only)
+- `GET /competition/{competitionID}/referee/invitation` - Generate referee invitation token (admin only)
 - `POST /referee/invitation/accept` - Accept referee invitation (authenticated user)
 - `POST /referee/invitation/accept-unauthenticated` - Accept referee invitation (unauthenticated, creates account if needed)
 - `GET /competition/{competitionID}/zones` - List zones for a competition

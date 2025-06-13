@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -296,16 +295,15 @@ func (s *Server) addRefereeToCompetition(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Referee added to competition"})
 }
 
-// generateRefereeInvitation godoc
-// @Summary      Generate referee invitation link
-// @Description  Generates an invitation link for a referee to join a competition
+// generateRefereeInvitationLink godoc
+// @Summary      Generate referee invitation token
+// @Description  Generates an invitation token for a referee to join a competition
 // @Tags         competition
 // @Accept       json
 // @Produce      json
 // @Param        Cookie        header    string  true   "Authentication cookie"
 // @Param        competitionID path      int     true   "Competition ID"
-// @Param        baseURL       query     string  false  "Base URL for the invitation link"
-// @Success      200           {object}  models.RefereeInvitationResponse  "Returns invitation link and token"
+// @Success      200           {object}  models.RefereeInvitationResponse  "Returns invitation token"
 // @Failure      400           {object}  models.ErrorResponse              "Bad Request"
 // @Failure      401           {object}  models.ErrorResponse              "Unauthorized (invalid credentials)"
 // @Failure      403           {object}  models.ErrorResponse              "Forbidden (admin access required)"
@@ -333,17 +331,12 @@ func (s *Server) generateRefereeInvitationLink(c *gin.Context) {
 		return
 	}
 
-	// Get base URL from query parameter or use default
-	baseURL := c.Query("baseURL")
-
-	invitationLink := fmt.Sprintf("%s/referee/invitation?token=%s", baseURL, token)
-
 	// Calculate expiration time (7 days from now)
 	expiresAt := time.Now().Add(time.Hour * 24 * 7).Format(time.RFC3339)
 
 	response := models.RefereeInvitationResponse{
-		InvitationLink: invitationLink,
-		ExpiresAt:      expiresAt,
+		Token:     token,
+		ExpiresAt: expiresAt,
 	}
 
 	c.JSON(http.StatusOK, response)

@@ -849,7 +849,7 @@ const docTemplate = `{
         },
         "/competition/{competitionID}/referee/invitation": {
             "get": {
-                "description": "Generates an invitation link for a referee to join a competition",
+                "description": "Generates an invitation token for a referee to join a competition",
                 "consumes": [
                     "application/json"
                 ],
@@ -859,7 +859,7 @@ const docTemplate = `{
                 "tags": [
                     "competition"
                 ],
-                "summary": "Generate referee invitation link",
+                "summary": "Generate referee invitation token",
                 "parameters": [
                     {
                         "type": "string",
@@ -874,17 +874,11 @@ const docTemplate = `{
                         "name": "competitionID",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Base URL for the invitation link",
-                        "name": "baseURL",
-                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Returns invitation link and token",
+                        "description": "Returns invitation token",
                         "schema": {
                             "$ref": "#/definitions/models.RefereeInvitationResponse"
                         }
@@ -1825,7 +1819,7 @@ const docTemplate = `{
                 "expires_at": {
                     "type": "string"
                 },
-                "invitation_link": {
+                "token": {
                     "type": "string"
                 }
             }

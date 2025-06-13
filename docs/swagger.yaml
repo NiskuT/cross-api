@@ -255,7 +255,7 @@ definitions:
     properties:
       expires_at:
         type: string
-      invitation_link:
+      token:
         type: string
     type: object
   models.RoleResponse:
@@ -784,7 +784,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Generates an invitation link for a referee to join a competition
+      description: Generates an invitation token for a referee to join a competition
       parameters:
       - description: Authentication cookie
         in: header
@@ -796,15 +796,11 @@ paths:
         name: competitionID
         required: true
         type: integer
-      - description: Base URL for the invitation link
-        in: query
-        name: baseURL
-        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Returns invitation link and token
+          description: Returns invitation token
           schema:
             $ref: '#/definitions/models.RefereeInvitationResponse'
         "400":
@@ -823,7 +819,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.ErrorResponse'
-      summary: Generate referee invitation link
+      summary: Generate referee invitation token
       tags:
       - competition
   /competition/{competitionID}/zones:

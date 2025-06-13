@@ -52,8 +52,8 @@ type RefereeInput struct {
 
 // RefereeInvitationResponse represents the response for generating a referee invitation link
 type RefereeInvitationResponse struct {
-	InvitationLink string `json:"invitation_link"`
-	ExpiresAt      string `json:"expires_at"`
+	Token     string `json:"token"`
+	ExpiresAt string `json:"expires_at"`
 }
 
 // RefereeInvitationAcceptInput represents the input for accepting a referee invitation

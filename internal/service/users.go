@@ -433,7 +433,7 @@ func (s *UserService) GenerateRefereeInvitationToken(ctx context.Context, compet
 		"competition_id": competitionID,
 		"type":           "referee_invitation",
 		"iss":            "golene-evasion.com",
-		"exp":            time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
+		"exp":            time.Now().Add(time.Minute * 5).Unix(), // 5 minutes
 	}
 
 	invitationToken := jwt.NewWithClaims(jwt.SigningMethodHS256, invitationClaims)
