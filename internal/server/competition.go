@@ -500,7 +500,7 @@ func (s *Server) getLiveranking(c *gin.Context) {
 	}
 
 	// Check if user has access to the competition
-	err = checkHasAccessToCompetition(c, int32(competitionID))
+	err = checkHasAdminAccessToCompetition(c, int32(competitionID))
 	if err != nil {
 		RespondError(c, http.StatusForbidden, err)
 		return
