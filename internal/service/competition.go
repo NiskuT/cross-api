@@ -6,12 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/NiskuT/cross-api/internal/config"
 	"github.com/NiskuT/cross-api/internal/domain/aggregate"
 	"github.com/NiskuT/cross-api/internal/domain/repository"
+	"github.com/NiskuT/cross-api/internal/utils"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -27,6 +29,7 @@ type CompetitionService struct {
 	scaleRepo       repository.ScaleRepository
 	liverankingRepo repository.LiverankingRepository
 	participantRepo repository.ParticipantRepository
+	runRepo         repository.RunRepository
 	cfg             *config.Config
 }
 
@@ -75,6 +78,13 @@ func CompetitionConfWithLiverankingRepo(repo repository.LiverankingRepository) C
 func CompetitionConfWithParticipantRepo(repo repository.ParticipantRepository) CompetitionServiceConfiguration {
 	return func(c *CompetitionService) error {
 		c.participantRepo = repo
+		return nil
+	}
+}
+
+func CompetitionConfWithRunRepo(repo repository.RunRepository) CompetitionServiceConfiguration {
+	return func(c *CompetitionService) error {
+		c.runRepo = repo
 		return nil
 	}
 }
@@ -335,7 +345,6 @@ func (s *CompetitionService) GetLiveranking(ctx context.Context, competitionID i
 	return s.liverankingRepo.ListLiverankingByCategoryAndGender(ctx, competitionID, category, gender, pageNumber, pageSize)
 }
 
-// ExportCompetitionResults exports competition results to Excel format
 func (s *CompetitionService) ExportCompetitionResults(ctx context.Context, competitionID int32) ([]byte, string, error) {
 	// Get competition details for filename
 	competition, err := s.competitionRepo.GetCompetition(ctx, competitionID)
@@ -346,10 +355,404 @@ func (s *CompetitionService) ExportCompetitionResults(ctx context.Context, compe
 	// Create filename from competition name
 	filename := strings.ReplaceAll(competition.GetName(), " ", "_") + "_results.xlsx"
 
-	// TODO: Implement Excel generation logic
-	// This is a placeholder - will implement the full logic
+	// Get all participants for this competition
+	participants, err := s.getAllParticipants(ctx, competitionID)
+	if err != nil {
+		return nil, "", err
+	}
 
-	return nil, filename, errors.New("not implemented yet")
+	// Get all runs for this competition
+	runs, err := s.getAllRuns(ctx, competitionID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Get all scales for this competition
+	scales, err := s.getAllScales(ctx, competitionID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Group participants by category and gender
+	participantGroups := s.groupParticipantsByCategoryGender(participants)
+
+	// Create Excel file
+	excelData, err := s.generateExcelFile(ctx, competitionID, participantGroups, runs, scales)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return excelData, filename, nil
+}
+
+// Helper method to get all participants for a competition
+func (s *CompetitionService) getAllParticipants(ctx context.Context, competitionID int32) ([]*aggregate.Participant, error) {
+	// Get all categories first
+	zones, err := s.scaleRepo.ListZones(ctx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract unique categories
+	categorySet := make(map[string]bool)
+	for _, zone := range zones {
+		categorySet[zone.GetCategory()] = true
+	}
+
+	// Get participants for each category
+	var allParticipants []*aggregate.Participant
+	for category := range categorySet {
+		participants, err := s.participantRepo.ListParticipantsByCategory(ctx, competitionID, category)
+		if err != nil {
+			return nil, err
+		}
+		allParticipants = append(allParticipants, participants...)
+	}
+
+	return allParticipants, nil
+}
+
+// Helper method to get all runs for a competition
+func (s *CompetitionService) getAllRuns(ctx context.Context, competitionID int32) (map[string][]*aggregate.Run, error) {
+	allRuns, err := s.runRepo.ListRuns(ctx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Group runs by participant (competitionID_dossard)
+	runsByParticipant := make(map[string][]*aggregate.Run)
+	for _, run := range allRuns {
+		key := fmt.Sprintf("%d_%d", run.GetCompetitionID(), run.GetDossard())
+		runsByParticipant[key] = append(runsByParticipant[key], run)
+	}
+
+	return runsByParticipant, nil
+}
+
+// Helper method to get all scales for a competition
+func (s *CompetitionService) getAllScales(ctx context.Context, competitionID int32) (map[string]*aggregate.Scale, error) {
+	zones, err := s.scaleRepo.ListZones(ctx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+
+	scales := make(map[string]*aggregate.Scale)
+	for _, zone := range zones {
+		scale, err := s.scaleRepo.GetScale(ctx, competitionID, zone.GetCategory(), zone.GetZone())
+		if err != nil {
+			continue // Skip if scale not found
+		}
+		key := fmt.Sprintf("%s_%s", zone.GetCategory(), zone.GetZone())
+		scales[key] = scale
+	}
+
+	return scales, nil
+}
+
+// Helper method to group participants by category and gender
+func (s *CompetitionService) groupParticipantsByCategoryGender(participants []*aggregate.Participant) map[string][]*aggregate.Participant {
+	groups := make(map[string][]*aggregate.Participant)
+
+	for _, participant := range participants {
+		key := fmt.Sprintf("%s_%s", participant.GetCategory(), participant.GetGender())
+		groups[key] = append(groups[key], participant)
+	}
+
+	return groups
+}
+
+// Helper method to generate Excel file
+func (s *CompetitionService) generateExcelFile(ctx context.Context,
+	competitionID int32,
+	participantGroups map[string][]*aggregate.Participant,
+	runs map[string][]*aggregate.Run,
+	scales map[string]*aggregate.Scale,
+) ([]byte, error) {
+	f := excelize.NewFile()
+	defer f.Close()
+
+	// Remove default sheet
+	f.DeleteSheet("Sheet1")
+
+	sheetIndex := 0
+	for groupKey, participants := range participantGroups {
+		parts := strings.Split(groupKey, "_")
+		if len(parts) != 2 {
+			continue
+		}
+		category, gender := parts[0], parts[1]
+
+		// Get zones for this category in lexical order
+		zones, err := s.getZonesForCategory(ctx, competitionID, category)
+		if err != nil {
+			continue
+		}
+
+		// Create sheet for this category-gender combination
+		sheetName := fmt.Sprintf("%s-%s", category, gender)
+		if sheetIndex == 0 {
+			f.SetSheetName("Sheet1", sheetName)
+		} else {
+			f.NewSheet(sheetName)
+		}
+
+		// Generate sheet content
+		err = s.generateSheetContent(f, sheetName, participants, zones, runs, scales, competitionID)
+		if err != nil {
+			continue
+		}
+
+		sheetIndex++
+	}
+
+	// Save to buffer
+	buffer, err := f.WriteToBuffer()
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
+}
+
+// Helper method to get zones for a category in lexical order
+func (s *CompetitionService) getZonesForCategory(ctx context.Context, competitionID int32, category string) ([]string, error) {
+	allZones, err := s.scaleRepo.ListZones(ctx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+
+	var zones []string
+	for _, zone := range allZones {
+		if zone.GetCategory() == category {
+			zones = append(zones, zone.GetZone())
+		}
+	}
+
+	// Sort zones lexically
+	sort.Strings(zones)
+	return zones, nil
+}
+
+// ParticipantResult represents the calculated results for a participant
+type ParticipantResult struct {
+	Participant  *aggregate.Participant
+	ZoneResults  []ZoneResult
+	TotalPoints  int32
+	TotalPenalty int32
+	TotalTime    int32
+	HasError     bool
+}
+
+// ZoneResult represents the result for a specific zone
+type ZoneResult struct {
+	Points  int32
+	Penalty int32
+	Time    int32
+	IsError bool
+}
+
+// Helper method to generate content for a sheet
+func (s *CompetitionService) generateSheetContent(f *excelize.File, sheetName string, participants []*aggregate.Participant, zones []string, runs map[string][]*aggregate.Run, scales map[string]*aggregate.Scale, competitionID int32) error {
+	// Create headers based on zone count
+	headers := []string{"Position", "Dossard", "Nom", "Prénom", "Club"}
+
+	// Determine expected runs per zone
+	expectedRunsPerZone := 1
+	if len(zones) == 2 {
+		expectedRunsPerZone = 2
+	}
+
+	// Add zone headers
+	if len(zones) == 2 {
+		// 2 zones, 2 runs each: Zone1, Zone2, Zone1, Zone2
+		for i := 0; i < 2; i++ {
+			for _, zone := range zones {
+				headers = append(headers, fmt.Sprintf("%s Points", zone))
+				headers = append(headers, fmt.Sprintf("%s Penalités", zone))
+				headers = append(headers, fmt.Sprintf("%s Temps", zone))
+			}
+		}
+	} else {
+		// 4 zones, 1 run each
+		for _, zone := range zones {
+			headers = append(headers, fmt.Sprintf("%s Points", zone))
+			headers = append(headers, fmt.Sprintf("%s Penalités", zone))
+			headers = append(headers, fmt.Sprintf("%s Temps", zone))
+		}
+	}
+
+	headers = append(headers, "Total Points", "Total Penalités", "Total Temps", "Points Gagnés")
+
+	// Write headers
+	for i, header := range headers {
+		cell := fmt.Sprintf("%s1", string(rune('A'+i)))
+		f.SetCellValue(sheetName, cell, header)
+	}
+
+	// Calculate results for each participant
+	var results []ParticipantResult
+
+	for _, participant := range participants {
+		participantKey := fmt.Sprintf("%d_%d", competitionID, participant.GetDossardNumber())
+		participantRuns := runs[participantKey]
+
+		result := ParticipantResult{
+			Participant: participant,
+			ZoneResults: make([]ZoneResult, len(zones)*expectedRunsPerZone),
+		}
+
+		// Group runs by zone
+		runsByZone := make(map[string][]*aggregate.Run)
+		for _, run := range participantRuns {
+			runsByZone[run.GetZone()] = append(runsByZone[run.GetZone()], run)
+		}
+
+		// Calculate results for each zone
+		zoneIndex := 0
+		for _, zone := range zones {
+			zoneRuns := runsByZone[zone]
+
+			// Check if we have the correct number of runs for this zone
+			if len(zoneRuns) != expectedRunsPerZone {
+				// Mark all runs for this zone as error
+				for i := 0; i < expectedRunsPerZone; i++ {
+					result.ZoneResults[zoneIndex] = ZoneResult{IsError: true}
+					zoneIndex++
+				}
+				result.HasError = true
+				continue
+			}
+
+			// Process each run for this zone
+			for _, run := range zoneRuns {
+				points := s.calculateRunPoints(run, scales, participant.GetCategory(), zone)
+				result.ZoneResults[zoneIndex] = ZoneResult{
+					Points:  points,
+					Penalty: run.GetPenality(),
+					Time:    run.GetChronoSec(),
+				}
+
+				if !result.HasError {
+					result.TotalPoints += points
+					result.TotalPenalty += run.GetPenality()
+					result.TotalTime += run.GetChronoSec()
+				}
+				zoneIndex++
+			}
+		}
+
+		results = append(results, result)
+	}
+
+	// Sort results by ranking (Total Points DESC, Total Penalty ASC, Total Time ASC)
+	sort.Slice(results, func(i, j int) bool {
+		if results[i].HasError && !results[j].HasError {
+			return false
+		}
+		if !results[i].HasError && results[j].HasError {
+			return true
+		}
+		if results[i].TotalPoints != results[j].TotalPoints {
+			return results[i].TotalPoints > results[j].TotalPoints
+		}
+		if results[i].TotalPenalty != results[j].TotalPenalty {
+			return results[i].TotalPenalty < results[j].TotalPenalty
+		}
+		return results[i].TotalTime < results[j].TotalTime
+	})
+
+	// Write data rows
+	for i, result := range results {
+		row := i + 2 // Start from row 2 (after headers)
+		col := 0
+
+		// Position
+		f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), i+1)
+		col++
+
+		// Participant info
+		f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), result.Participant.GetDossardNumber())
+		col++
+		f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), result.Participant.GetLastName())
+		col++
+		f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), result.Participant.GetFirstName())
+		col++
+		f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), result.Participant.GetClub())
+		col++
+
+		// Zone results
+		for _, zoneResult := range result.ZoneResults {
+			if zoneResult.IsError {
+				f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), "ERROR")
+				col++
+				f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), "ERROR")
+				col++
+				f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), "ERROR")
+				col++
+			} else {
+				f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), zoneResult.Points)
+				col++
+				f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), zoneResult.Penalty)
+				col++
+				f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), zoneResult.Time)
+				col++
+			}
+		}
+
+		// Totals
+		if result.HasError {
+			f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), "ERROR")
+			col++
+			f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), "ERROR")
+			col++
+			f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), "ERROR")
+			col++
+			f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), "ERROR")
+		} else {
+			f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), result.TotalPoints)
+			col++
+			f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), result.TotalPenalty)
+			col++
+			f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), result.TotalTime)
+			col++
+			// Points earned based on ranking
+			pointsEarned := utils.GetPointsEarned(int32(i + 1))
+			f.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+col)), row), pointsEarned)
+		}
+	}
+
+	return nil
+}
+
+// Helper method to calculate points for a run
+func (s *CompetitionService) calculateRunPoints(run *aggregate.Run, scales map[string]*aggregate.Scale, category, zone string) int32 {
+	scaleKey := fmt.Sprintf("%s_%s", category, zone)
+	scale, exists := scales[scaleKey]
+	if !exists {
+		return 0
+	}
+
+	points := int32(0)
+	if run.GetDoor1() {
+		points += scale.GetPointsDoor1()
+	}
+	if run.GetDoor2() {
+		points += scale.GetPointsDoor2()
+	}
+	if run.GetDoor3() {
+		points += scale.GetPointsDoor3()
+	}
+	if run.GetDoor4() {
+		points += scale.GetPointsDoor4()
+	}
+	if run.GetDoor5() {
+		points += scale.GetPointsDoor5()
+	}
+	if run.GetDoor6() {
+		points += scale.GetPointsDoor6()
+	}
+
+	return points
 }
 
 func (s *CompetitionService) GetCompetition(ctx context.Context, competitionID int32) (*aggregate.Competition, error) {
