@@ -88,6 +88,7 @@ func runRestServer(_ *cobra.Command, _ []string) {
 		service.CompetitionConfWithScaleRepo(scaleRepo),
 		service.CompetitionConfWithLiverankingRepo(liverankingRepo),
 		service.CompetitionConfWithParticipantRepo(participantRepo),
+		service.CompetitionConfWithRunRepo(runRepo),
 		service.CompetitionConfWithConfig(cfg),
 	)
 

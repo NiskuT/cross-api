@@ -103,7 +103,7 @@ func (s *Server) getRouter(cfg *config.Config) *gin.Engine {
 		AllowOrigins:     cfg.AllowOrigins,
 		AllowMethods:     []string{"POST", "GET", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
-		ExposeHeaders:    []string{"Content-Length", "x-token-refreshed", "x-user-roles"},
+		ExposeHeaders:    []string{"Content-Length", "x-token-refreshed", "x-user-roles", "Content-Disposition", "Content-Type", "Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
