@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -855,4 +856,55 @@ func (s *Server) listParticipantsByCategory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// exportCompetitionResults godoc
+// @Summary      Export competition results to Excel
+// @Description  Exports all competition results to an Excel file with sheets per category-gender combination
+// @Tags         competition
+// @Accept       json
+// @Produce      application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+// @Param        Cookie        header    string  true   "Authentication cookie"
+// @Param        competitionID path      int     true   "Competition ID"
+// @Success      200           {file}    file    "Excel file with competition results"
+// @Failure      400           {object}  models.ErrorResponse "Bad Request"
+// @Failure      401           {object}  models.ErrorResponse "Unauthorized"
+// @Failure      403           {object}  models.ErrorResponse "Forbidden (admin access required)"
+// @Failure      404           {object}  models.ErrorResponse "Competition not found"
+// @Failure      500           {object}  models.ErrorResponse "Internal Server Error"
+// @Router       /competition/{competitionID}/results/export [get]
+func (s *Server) exportCompetitionResults(c *gin.Context) {
+	competitionIDStr := c.Param("competitionID")
+
+	competitionID, err := strconv.ParseInt(competitionIDStr, 10, 32)
+	if err != nil {
+		RespondError(c, http.StatusBadRequest, errors.New("invalid competition ID"))
+		return
+	}
+
+	// Check if user has admin access to the competition
+	err = checkHasAdminAccessToCompetition(c, int32(competitionID))
+	if err != nil {
+		RespondError(c, http.StatusForbidden, err)
+		return
+	}
+
+	// Export results through service
+	excelData, filename, err := s.competitionService.ExportCompetitionResults(c, int32(competitionID))
+	if err != nil {
+		if errors.Is(err, repository.ErrCompetitionNotFound) {
+			RespondError(c, http.StatusNotFound, errors.New("competition not found"))
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Set headers for file download
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Length", fmt.Sprintf("%d", len(excelData)))
+
+	// Send the Excel file
+	c.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelData)
 }

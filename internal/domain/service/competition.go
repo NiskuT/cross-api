@@ -21,4 +21,5 @@ type CompetitionService interface {
 	UpdateScale(ctx context.Context, competitionID int32, scale *aggregate.Scale) error
 	DeleteScale(ctx context.Context, competitionID int32, category string, zone string) error
 	GetLiveranking(ctx context.Context, competitionID int32, category, gender string, pageNumber, pageSize int32) ([]*aggregate.Liveranking, int32, error)
+	ExportCompetitionResults(ctx context.Context, competitionID int32) ([]byte, string, error)
 }

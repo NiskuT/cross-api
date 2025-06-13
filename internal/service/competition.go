@@ -335,6 +335,23 @@ func (s *CompetitionService) GetLiveranking(ctx context.Context, competitionID i
 	return s.liverankingRepo.ListLiverankingByCategoryAndGender(ctx, competitionID, category, gender, pageNumber, pageSize)
 }
 
+// ExportCompetitionResults exports competition results to Excel format
+func (s *CompetitionService) ExportCompetitionResults(ctx context.Context, competitionID int32) ([]byte, string, error) {
+	// Get competition details for filename
+	competition, err := s.competitionRepo.GetCompetition(ctx, competitionID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Create filename from competition name
+	filename := strings.ReplaceAll(competition.GetName(), " ", "_") + "_results.xlsx"
+
+	// TODO: Implement Excel generation logic
+	// This is a placeholder - will implement the full logic
+
+	return nil, filename, errors.New("not implemented yet")
+}
+
 func (s *CompetitionService) GetCompetition(ctx context.Context, competitionID int32) (*aggregate.Competition, error) {
 	return s.competitionRepo.GetCompetition(ctx, competitionID)
 }
