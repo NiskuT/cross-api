@@ -38,12 +38,13 @@ type Participant struct {
 	LastName      string
 	Category      string
 	Gender        string
+	Club          string
 }
 
 // GetParticipant retrieves a participant by competition ID and dossard number
 func (r *SQLParticipantRepository) GetParticipant(ctx context.Context, competitionID int32, dossardNumber int32) (*aggregate.Participant, error) {
 	query := `
-		SELECT competition_id, dossard_number, first_name, last_name, category, gender
+		SELECT competition_id, dossard_number, first_name, last_name, category, gender, club
 		FROM participants
 		WHERE competition_id = ? AND dossard_number = ?
 	`
@@ -57,6 +58,7 @@ func (r *SQLParticipantRepository) GetParticipant(ctx context.Context, competiti
 		&participant.LastName,
 		&participant.Category,
 		&participant.Gender,
+		&participant.Club,
 	)
 
 	if err != nil {
@@ -73,6 +75,7 @@ func (r *SQLParticipantRepository) GetParticipant(ctx context.Context, competiti
 	participantAggregate.SetLastName(participant.LastName)
 	participantAggregate.SetCategory(participant.Category)
 	participantAggregate.SetGender(participant.Gender)
+	participantAggregate.SetClub(participant.Club)
 
 	return participantAggregate, nil
 }
@@ -80,8 +83,8 @@ func (r *SQLParticipantRepository) GetParticipant(ctx context.Context, competiti
 // CreateParticipant creates a new participant
 func (r *SQLParticipantRepository) CreateParticipant(ctx context.Context, participant *aggregate.Participant) error {
 	query := `
-		INSERT INTO participants (competition_id, dossard_number, first_name, last_name, category, gender)
-		VALUES (?, ?, ?, ?, ?, ?)
+		INSERT INTO participants (competition_id, dossard_number, first_name, last_name, category, gender, club)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 
 	_, err := r.db.ExecContext(
@@ -93,6 +96,7 @@ func (r *SQLParticipantRepository) CreateParticipant(ctx context.Context, partic
 		participant.GetLastName(),
 		participant.GetCategory(),
 		participant.GetGender(),
+		participant.GetClub(),
 	)
 
 	if err != nil {
@@ -110,7 +114,7 @@ func (r *SQLParticipantRepository) CreateParticipant(ctx context.Context, partic
 func (r *SQLParticipantRepository) UpdateParticipant(ctx context.Context, participant *aggregate.Participant) error {
 	query := `
 		UPDATE participants
-		SET first_name = ?, last_name = ?, category = ?, gender = ?
+		SET first_name = ?, last_name = ?, category = ?, gender = ?, club = ?
 		WHERE competition_id = ? AND dossard_number = ?
 	`
 
@@ -121,6 +125,7 @@ func (r *SQLParticipantRepository) UpdateParticipant(ctx context.Context, partic
 		participant.GetLastName(),
 		participant.GetCategory(),
 		participant.GetGender(),
+		participant.GetClub(),
 		participant.GetCompetitionID(),
 		participant.GetDossardNumber(),
 	)
@@ -168,7 +173,7 @@ func (r *SQLParticipantRepository) DeleteParticipant(ctx context.Context, compet
 // ListParticipantsByCategory retrieves all participants for a competition by category
 func (r *SQLParticipantRepository) ListParticipantsByCategory(ctx context.Context, competitionID int32, category string) ([]*aggregate.Participant, error) {
 	query := `
-		SELECT competition_id, dossard_number, first_name, last_name, category, gender
+		SELECT competition_id, dossard_number, first_name, last_name, category, gender, club
 		FROM participants
 		WHERE competition_id = ? AND category = ?
 		ORDER BY dossard_number
@@ -190,6 +195,7 @@ func (r *SQLParticipantRepository) ListParticipantsByCategory(ctx context.Contex
 			&participant.LastName,
 			&participant.Category,
 			&participant.Gender,
+			&participant.Club,
 		)
 
 		if err != nil {
@@ -203,6 +209,7 @@ func (r *SQLParticipantRepository) ListParticipantsByCategory(ctx context.Contex
 		participantAggregate.SetLastName(participant.LastName)
 		participantAggregate.SetCategory(participant.Category)
 		participantAggregate.SetGender(participant.Gender)
+		participantAggregate.SetClub(participant.Club)
 
 		participants = append(participants, participantAggregate)
 	}

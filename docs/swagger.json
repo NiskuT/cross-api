@@ -1639,6 +1639,9 @@
                 "chrono_sec": {
                     "type": "integer"
                 },
+                "club": {
+                    "type": "string"
+                },
                 "dossard": {
                     "type": "integer"
                 },
@@ -1694,6 +1697,9 @@
                 "category": {
                     "type": "string"
                 },
+                "club": {
+                    "type": "string"
+                },
                 "competition_id": {
                     "type": "integer"
                 },
@@ -1726,6 +1732,9 @@
             "type": "object",
             "properties": {
                 "category": {
+                    "type": "string"
+                },
+                "club": {
                     "type": "string"
                 },
                 "competition_id": {

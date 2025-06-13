@@ -137,6 +137,8 @@ definitions:
         type: string
       chrono_sec:
         type: integer
+      club:
+        type: string
       dossard:
         type: integer
       first_name:
@@ -168,6 +170,8 @@ definitions:
     properties:
       category:
         type: string
+      club:
+        type: string
       competition_id:
         type: integer
       dossard_number:
@@ -196,6 +200,8 @@ definitions:
   models.ParticipantResponse:
     properties:
       category:
+        type: string
+      club:
         type: string
       competition_id:
         type: integer

@@ -7,4 +7,5 @@ type Participant struct {
 	LastName      string
 	Category      string
 	Gender        string
+	Club          string
 }

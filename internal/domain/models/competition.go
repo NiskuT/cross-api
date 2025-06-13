@@ -96,6 +96,7 @@ type LiverankingResponse struct {
 	LastName     string `json:"last_name"`
 	Category     string `json:"category"`
 	Gender       string `json:"gender"`
+	Club         string `json:"club"`
 	NumberOfRuns int32  `json:"number_of_runs"`
 	TotalPoints  int32  `json:"total_points"`
 	Penality     int32  `json:"penality"`

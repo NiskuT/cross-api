@@ -34,6 +34,10 @@ func (p *Participant) GetGender() string {
 	return p.participant.Gender
 }
 
+func (p *Participant) GetClub() string {
+	return p.participant.Club
+}
+
 func (p *Participant) SetCompetitionID(competitionID int32) {
 	p.participant.CompetitionID = competitionID
 }
@@ -56,4 +60,8 @@ func (p *Participant) SetCategory(category string) {
 
 func (p *Participant) SetGender(gender string) {
 	p.participant.Gender = gender
+}
+
+func (p *Participant) SetClub(club string) {
+	p.participant.Club = club
 }

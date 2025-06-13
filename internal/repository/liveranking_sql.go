@@ -125,7 +125,7 @@ func (r *SQLLiverankingRepository) ListLiveranking(ctx context.Context, competit
 	offset := (pageNumber - 1) * pageSize
 
 	query := `
-		SELECT l.competition_id, l.dossard_number, p.first_name, p.last_name, p.category, p.gender,
+		SELECT l.competition_id, l.dossard_number, p.first_name, p.last_name, p.category, p.gender, p.club,
 		       l.number_of_runs, l.total_points, l.penality, l.chrono_sec
 		FROM liverankings l
 		JOIN participants p ON l.competition_id = p.competition_id AND l.dossard_number = p.dossard_number
@@ -145,7 +145,7 @@ func (r *SQLLiverankingRepository) ListLiveranking(ctx context.Context, competit
 		liveranking := aggregate.NewLiveranking()
 
 		var competitionID, dossardNumber, numberOfRuns, totalPoints, penality, chronoSec int32
-		var firstName, lastName, category, gender string
+		var firstName, lastName, category, gender, club string
 
 		err := rows.Scan(
 			&competitionID,
@@ -154,6 +154,7 @@ func (r *SQLLiverankingRepository) ListLiveranking(ctx context.Context, competit
 			&lastName,
 			&category,
 			&gender,
+			&club,
 			&numberOfRuns,
 			&totalPoints,
 			&penality,
@@ -169,6 +170,7 @@ func (r *SQLLiverankingRepository) ListLiveranking(ctx context.Context, competit
 		liveranking.SetLastName(lastName)
 		liveranking.SetCategory(category)
 		liveranking.SetGender(gender)
+		liveranking.SetClub(club)
 		liveranking.SetNumberOfRuns(numberOfRuns)
 		liveranking.SetTotalPoints(totalPoints)
 		liveranking.SetPenality(penality)
@@ -210,7 +212,7 @@ func (r *SQLLiverankingRepository) ListLiverankingByCategoryAndGender(ctx contex
 	offset := (pageNumber - 1) * pageSize
 
 	query := `
-		SELECT l.competition_id, l.dossard_number, p.first_name, p.last_name, p.category, p.gender,
+		SELECT l.competition_id, l.dossard_number, p.first_name, p.last_name, p.category, p.gender, p.club,
 		       l.number_of_runs, l.total_points, l.penality, l.chrono_sec
 		FROM liverankings l
 		JOIN participants p ON l.competition_id = p.competition_id AND l.dossard_number = p.dossard_number
@@ -230,7 +232,7 @@ func (r *SQLLiverankingRepository) ListLiverankingByCategoryAndGender(ctx contex
 		liveranking := aggregate.NewLiveranking()
 
 		var competitionID, dossardNumber, numberOfRuns, totalPoints, penality, chronoSec int32
-		var firstName, lastName, category, gender string
+		var firstName, lastName, category, gender, club string
 
 		err := rows.Scan(
 			&competitionID,
@@ -239,6 +241,7 @@ func (r *SQLLiverankingRepository) ListLiverankingByCategoryAndGender(ctx contex
 			&lastName,
 			&category,
 			&gender,
+			&club,
 			&numberOfRuns,
 			&totalPoints,
 			&penality,
@@ -254,6 +257,7 @@ func (r *SQLLiverankingRepository) ListLiverankingByCategoryAndGender(ctx contex
 		liveranking.SetLastName(lastName)
 		liveranking.SetCategory(category)
 		liveranking.SetGender(gender)
+		liveranking.SetClub(club)
 		liveranking.SetNumberOfRuns(numberOfRuns)
 		liveranking.SetTotalPoints(totalPoints)
 		liveranking.SetPenality(penality)

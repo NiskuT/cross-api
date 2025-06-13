@@ -17,7 +17,7 @@ import (
 
 // Define error constants
 var (
-	ErrInvalidFileFormat = errors.New("invalid file format: expected CSV or Excel file with columns for dossard number, category, last name, first name, and gender (H/F)")
+	ErrInvalidFileFormat = errors.New("invalid file format: expected CSV or Excel file with columns for dossard number, category, last name, first name, gender (H/F), and club")
 	ErrParticipantExists = errors.New("participant with this dossard number already exists in the competition")
 	ErrCategoryAndGender = errors.New("category and gender cannot be empty")
 )
@@ -138,7 +138,7 @@ func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID 
 
 		// File should have at least 5 columns: dossard number, category, last name, first name, gender
 		if len(row) < 5 {
-			return fmt.Errorf("invalid format on row %d: expected 5 columns (dossard number, category, last name, first name, gender)", i+1)
+			return fmt.Errorf("invalid format on row %d: expected at least 5 columns (dossard number, category, last name, first name, gender, club)", i+1)
 		}
 
 		// Parse dossard number (first column)
@@ -156,6 +156,11 @@ func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID 
 		firstName := strings.TrimSpace(row[3])
 		// Get gender (fifth column)
 		gender := strings.TrimSpace(strings.ToUpper(row[4]))
+		// Get club (sixth column, optional)
+		var club string
+		if len(row) > 5 {
+			club = strings.TrimSpace(row[5])
+		}
 
 		// Validate gender
 		if gender != "H" && gender != "F" {
@@ -170,6 +175,7 @@ func (s *CompetitionService) AddParticipants(ctx context.Context, competitionID 
 		participant.SetLastName(lastName)
 		participant.SetCategory(categoryFromFile)
 		participant.SetGender(gender)
+		participant.SetClub(club)
 
 		// Add participant to database
 		err = s.participantRepo.CreateParticipant(ctx, participant)

@@ -708,6 +708,7 @@ func (s *Server) getLiveranking(c *gin.Context) {
 			LastName:     ranking.GetLastName(),
 			Category:     ranking.GetCategory(),
 			Gender:       ranking.GetGender(),
+			Club:         ranking.GetClub(),
 			NumberOfRuns: ranking.GetNumberOfRuns(),
 			TotalPoints:  ranking.GetTotalPoints(),
 			Penality:     ranking.GetPenality(),
@@ -754,6 +755,7 @@ func (s *Server) createParticipant(c *gin.Context) {
 	participant.SetLastName(participantInput.LastName)
 	participant.SetCategory(participantInput.Category)
 	participant.SetGender(participantInput.Gender)
+	participant.SetClub(participantInput.Club)
 
 	// Create participant through service
 	err = s.competitionService.CreateParticipant(c, participant)
@@ -780,6 +782,7 @@ func (s *Server) createParticipant(c *gin.Context) {
 		LastName:      participant.GetLastName(),
 		Category:      participant.GetCategory(),
 		Gender:        participant.GetGender(),
+		Club:          participant.GetClub(),
 	}
 
 	c.JSON(http.StatusCreated, response)
@@ -847,6 +850,7 @@ func (s *Server) listParticipantsByCategory(c *gin.Context) {
 			LastName:      participant.GetLastName(),
 			Category:      participant.GetCategory(),
 			Gender:        participant.GetGender(),
+			Club:          participant.GetClub(),
 		}
 	}
 

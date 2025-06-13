@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS participants (
     last_name VARCHAR(255) NOT NULL,
     category VARCHAR(100) NOT NULL,
     gender CHAR(1) NOT NULL DEFAULT 'H' CHECK (gender IN ('H', 'F')),
+    club VARCHAR(40) NOT NULL DEFAULT '',
     PRIMARY KEY (competition_id, dossard_number)
 );
 `

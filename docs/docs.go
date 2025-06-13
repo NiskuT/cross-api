@@ -1645,6 +1645,9 @@ const docTemplate = `{
                 "chrono_sec": {
                     "type": "integer"
                 },
+                "club": {
+                    "type": "string"
+                },
                 "dossard": {
                     "type": "integer"
                 },
@@ -1700,6 +1703,9 @@ const docTemplate = `{
                 "category": {
                     "type": "string"
                 },
+                "club": {
+                    "type": "string"
+                },
                 "competition_id": {
                     "type": "integer"
                 },
@@ -1732,6 +1738,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "category": {
+                    "type": "string"
+                },
+                "club": {
                     "type": "string"
                 },
                 "competition_id": {
