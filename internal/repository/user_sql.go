@@ -116,7 +116,7 @@ func (r *SQLUserRepository) UpdateUser(ctx context.Context, user *aggregate.User
 		WHERE id = ?
 	`
 
-	result, err := r.db.ExecContext(
+	_, err := r.db.ExecContext(
 		ctx,
 		query,
 		user.GetEmail(),
@@ -133,15 +133,6 @@ func (r *SQLUserRepository) UpdateUser(ctx context.Context, user *aggregate.User
 			return ErrDuplicateUser
 		}
 		return err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return ErrUserNotFound
 	}
 
 	return nil
